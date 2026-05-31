@@ -1,0 +1,2732 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIVIX Central</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,300..700;1,400..600&family=Schibsted+Grotesk:ital,wght@0,400..700;1,400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+<style>
+/* ============================================================
+   MIVIX CENTRAL — design tokens & base styles
+   Palette: crème + terracotta doux dominant, teintes terreuses
+   Type: grotesque doux (Hanken / Schibsted Grotesk)
+   ============================================================ */
+
+:root {
+  /* — Surfaces (warm cream, low saturation) — */
+  --cream:        oklch(0.962 0.014 78);
+  --cream-deep:   oklch(0.935 0.018 76);
+  --paper:        oklch(0.985 0.008 84);
+  --paper-2:      oklch(0.972 0.012 80);
+  --line:         oklch(0.86 0.018 74);
+  --line-soft:    oklch(0.90 0.015 76);
+
+  /* — Ink — */
+  --ink:          oklch(0.305 0.022 56);
+  --ink-2:        oklch(0.435 0.022 58);
+  --ink-soft:     oklch(0.555 0.020 62);
+  --ink-faint:    oklch(0.66 0.018 66);
+
+  /* — Accents (warm, earthy; chroma kept gentle) — */
+  --terracotta:   oklch(0.665 0.105 46);
+  --terracotta-d: oklch(0.560 0.098 42);
+  --sauge:        oklch(0.640 0.055 148);
+  --sauge-d:      oklch(0.530 0.050 150);
+  --rose:         oklch(0.700 0.072 18);
+  --olive:        oklch(0.620 0.062 118);
+  --peche:        oklch(0.760 0.085 64);
+  --ambre:        oklch(0.715 0.095 70);
+  --lavande:      oklch(0.650 0.058 305);
+  --prune:        oklch(0.560 0.062 350);
+  --honey:        oklch(0.730 0.078 88);
+
+  /* — Accent washes (very pale tints for fills) — */
+  --terracotta-w: oklch(0.905 0.038 52);
+  --sauge-w:      oklch(0.910 0.028 150);
+  --rose-w:       oklch(0.915 0.030 20);
+  --lavande-w:    oklch(0.910 0.026 305);
+
+  --shadow-sm: 0 1px 2px oklch(0.40 0.03 60 / 0.05), 0 2px 8px oklch(0.40 0.03 60 / 0.04);
+  --shadow-md: 0 4px 14px oklch(0.40 0.03 60 / 0.07), 0 12px 40px oklch(0.40 0.03 60 / 0.06);
+  --shadow-lg: 0 10px 30px oklch(0.40 0.03 60 / 0.10), 0 30px 80px oklch(0.40 0.03 60 / 0.10);
+
+  --font-display: 'Schibsted Grotesk', 'Hanken Grotesk', system-ui, sans-serif;
+  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 26px;
+  --r-xl: 36px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-soft: cubic-bezier(0.33, 0.02, 0.16, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background-color: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* subtle paper grain baked into the page background (no overlay, no blend) */
+body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+body.no-grain { background-image: none; }
+
+#root { position: relative; z-index: 1; }
+
+::selection { background: var(--terracotta-w); color: var(--ink); }
+
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.015em; color: var(--ink); }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; color: inherit; }
+
+.eyebrow {
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+/* — Scrollbar — */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 20px; border: 3px solid var(--cream); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+/* ============================================================
+   App shell
+   ============================================================ */
+.app { min-height: 100vh; }
+
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 68px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 34px;
+  transition: background 0.5s var(--ease), border-color 0.5s var(--ease), backdrop-filter 0.5s;
+  border-bottom: 1px solid transparent;
+}
+.topbar.solid {
+  background: oklch(0.962 0.014 78 / 0.82);
+  backdrop-filter: blur(18px) saturate(1.1);
+  border-bottom: 1px solid var(--line-soft);
+}
+.brand {
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.brand .mark { flex: none; }
+.brand .word {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.brand .word .light { color: var(--ink-soft); font-weight: 400; }
+
+.topbar .spacer { flex: 1; }
+
+.top-search {
+  display: flex; align-items: center; gap: 10px;
+  height: 40px;
+  width: 280px;
+  padding: 0 16px;
+  border-radius: 22px;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  color: var(--ink-soft);
+  font-size: 14px;
+  transition: width 0.4s var(--ease), box-shadow 0.3s, border-color 0.3s;
+}
+.top-search:hover { border-color: var(--line); }
+.top-search input { border: none; outline: none; background: none; width: 100%; font-size: 14px; }
+.top-search input::placeholder { color: var(--ink-faint); }
+
+.icon-btn {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--ink-2);
+  transition: background 0.25s, color 0.25s, transform 0.25s var(--ease);
+}
+.icon-btn:hover { background: var(--cream-deep); color: var(--ink); transform: translateY(-1px); }
+
+/* search popover */
+.search-pop {
+  position: absolute;
+  top: 50px; right: 0;
+  width: 360px;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+  z-index: 80;
+  animation: rise 0.32s var(--ease) forwards;
+}
+.search-empty { padding: 16px 14px; color: var(--ink-soft); font-size: 14px; }
+.search-row {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 11px 12px; border-radius: 10px;
+  transition: background 0.2s;
+}
+.search-row:hover { background: var(--cream-deep); }
+.sr-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.sr-txt { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.sr-title { font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-u { font-size: 11.5px; color: var(--ink-faint); }
+.fav-badge {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  border-radius: 9px;
+  background: var(--terracotta); color: var(--paper);
+  font-size: 10.5px; font-weight: 700;
+  display: grid; place-items: center;
+}
+
+body.no-grain::before { display: none; }
+
+.empty-universe {
+  text-align: center;
+  padding: 80px 20px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   Home — banner
+   ============================================================ */
+.banner {
+  position: relative;
+  height: 100vh;
+  min-height: 720px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background: radial-gradient(120% 100% at 70% 30%, var(--paper-2), var(--cream) 55%, var(--cream-deep));
+}
+.banner-art { position: absolute; inset: 0; z-index: 0; }
+.banner-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 60px;
+  width: 100%;
+}
+.banner-vignette {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(80% 120% at 18% 50%, var(--cream) 0%, oklch(0.962 0.014 78 / 0.0) 52%);
+}
+.banner h1 {
+  font-size: clamp(54px, 7.4vw, 116px);
+  line-height: 0.96;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  max-width: 12ch;
+}
+.banner .sub {
+  margin-top: 26px;
+  font-size: clamp(18px, 1.7vw, 24px);
+  color: var(--ink-2);
+  max-width: 34ch;
+  line-height: 1.45;
+}
+.banner .quote {
+  margin-top: 56px;
+  padding-left: 24px;
+  border-left: 2px solid var(--terracotta);
+  max-width: 40ch;
+}
+.banner .quote p {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(19px, 1.8vw, 25px);
+  line-height: 1.4;
+  color: var(--ink);
+}
+.scroll-cue {
+  position: absolute;
+  bottom: 30px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  color: var(--ink-faint);
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  animation: cue 2.6s var(--ease-soft) infinite;
+}
+@keyframes cue { 0%,100% { transform: translate(-50%, 0); opacity: 0.7; } 50% { transform: translate(-50%, 8px); opacity: 1; } }
+
+/* slow autonomous drift on abstract groups (parallaxe douce) */
+.drift-a { animation: driftA 26s var(--ease-soft) infinite alternate; transform-box: fill-box; }
+.drift-b { animation: driftB 32s var(--ease-soft) infinite alternate; transform-box: fill-box; }
+.drift-c { animation: driftC 38s var(--ease-soft) infinite alternate; transform-box: fill-box; }
+@keyframes driftA { from { transform: translate(0,0) rotate(0deg); } to { transform: translate(-22px, 16px) rotate(2.5deg); } }
+@keyframes driftB { from { transform: translate(0,0) rotate(0deg); } to { transform: translate(18px, -14px) rotate(-2deg); } }
+@keyframes driftC { from { transform: translate(0,0); } to { transform: translate(-14px, -20px); } }
+@media (prefers-reduced-motion: reduce) {
+  .drift-a, .drift-b, .drift-c, .scroll-cue { animation: none; }
+  .rise, .entry { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .view { animation: none !important; }
+}
+
+/* fade-up entrance */
+.rise { opacity: 0; transform: translateY(26px); animation: rise 1s var(--ease) forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+/* ============================================================
+   Universes section
+   ============================================================ */
+.section { max-width: 1280px; margin: 0 auto; padding: 110px 48px; }
+.section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin-bottom: 52px; }
+.section-head h2 { font-size: clamp(30px, 3.6vw, 46px); font-weight: 500; line-height: 1.04; }
+.section-head p { color: var(--ink-soft); max-width: 40ch; font-size: 16px; line-height: 1.55; }
+
+.universe-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 22px;
+}
+.u-card {
+  position: relative;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 0.55s var(--ease), box-shadow 0.55s var(--ease), border-color 0.4s;
+  display: flex;
+  flex-direction: column;
+  min-height: 270px;
+}
+.u-card:hover { transform: translateY(-7px); box-shadow: var(--shadow-lg); border-color: transparent; }
+.u-card .art {
+  position: relative;
+  flex: 1;
+  min-height: 168px;
+  overflow: hidden;
+}
+.u-card .art svg { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform 1.1s var(--ease); }
+.u-card:hover .art svg { transform: scale(1.06) rotate(2deg); }
+.u-card .meta { padding: 20px 24px 24px; }
+.u-card .meta .k {
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600;
+  color: var(--ucol, var(--terracotta));
+  margin-bottom: 8px;
+}
+.u-card .meta h3 { font-size: 24px; font-weight: 500; margin-bottom: 7px; letter-spacing: -0.01em; }
+.u-card .meta p { font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+.u-card .count {
+  position: absolute; top: 16px; right: 18px; z-index: 3;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--ink-2);
+  background: oklch(0.985 0.008 84 / 0.78);
+  backdrop-filter: blur(6px);
+  padding: 5px 11px; border-radius: 20px;
+  border: 1px solid var(--line-soft);
+}
+
+/* span helpers */
+.col-6 { grid-column: span 6; }
+.col-4 { grid-column: span 4; }
+.col-8 { grid-column: span 8; }
+.col-3 { grid-column: span 3; }
+.col-12 { grid-column: span 12; }
+
+/* ============================================================
+   Tools strip (galerie / timeline / mur / carte)
+   ============================================================ */
+.tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.tool {
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, var(--paper), var(--paper-2));
+  padding: 26px 24px 24px;
+  cursor: pointer;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  min-height: 150px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.tool:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+.tool h4 { font-size: 18px; font-weight: 500; margin-bottom: 5px; }
+.tool p { font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+.tool .glyph { width: 38px; height: 38px; margin-bottom: auto; }
+
+/* ============================================================
+   Vue d'ensemble — dashboard widgets
+   ============================================================ */
+.dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.dash-card {
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, var(--paper), color-mix(in oklch, var(--ucol) 4%, var(--paper)));
+  padding: 22px 22px 20px;
+  min-height: 210px;
+  display: flex; flex-direction: column;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), border-color 0.3s;
+}
+.dash-card:hover { box-shadow: var(--shadow-md); border-color: color-mix(in oklch, var(--ucol) 35%, var(--line)); }
+.dash-head { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+.dash-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dash-head h4 { font-size: 15px; font-weight: 600; letter-spacing: 0.01em; color: var(--ink-2); }
+.dash-list { list-style: none; display: flex; flex-direction: column; }
+.dash-item {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 0; cursor: pointer;
+  border-top: 1px solid var(--line-soft);
+  transition: padding-left 0.25s var(--ease);
+}
+.dash-item:first-child { border-top: none; }
+.dash-item:hover { padding-left: 6px; }
+.dash-item-txt {
+  font-size: 14px; color: var(--ink); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.dash-item-meta { font-size: 11px; letter-spacing: 0.04em; color: var(--ucol); font-weight: 600; }
+.dash-empty { flex: 1; display: grid; place-items: center; color: var(--ink-faint); font-size: 26px; font-weight: 300; }
+
+.quote-card { cursor: pointer; justify-content: flex-start; }
+.quote-card-txt {
+  font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.4; color: var(--ink);
+  margin-bottom: 14px; margin-top: 4px;
+}
+.quote-card-src { font-size: 12px; letter-spacing: 0.04em; color: var(--ucol); font-weight: 600; margin-top: auto; }
+
+/* ============================================================
+   Universe detail view
+   ============================================================ */
+.u-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 132px 48px 56px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.u-hero-art { position: absolute; inset: 0; z-index: 0; opacity: 0.92; }
+.u-hero-inner { position: relative; z-index: 2; max-width: 1280px; margin: 0 auto; }
+.u-hero .back {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--ink-2); font-weight: 500;
+  padding: 8px 15px 8px 11px; border-radius: 20px;
+  background: oklch(0.985 0.008 84 / 0.7);
+  border: 1px solid var(--line-soft);
+  margin-bottom: 30px;
+  transition: transform 0.3s var(--ease), background 0.3s;
+}
+.u-hero .back:hover { transform: translateX(-3px); background: var(--paper); }
+.u-hero .k { color: var(--ucol); }
+.u-hero h1 { font-size: clamp(40px, 5.5vw, 76px); font-weight: 500; letter-spacing: -0.025em; line-height: 0.98; margin: 14px 0 18px; }
+.u-hero .desc { font-size: clamp(17px, 1.6vw, 21px); color: var(--ink-2); max-width: 46ch; line-height: 1.5; }
+.u-hero .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; }
+.chip {
+  font-size: 13px; font-weight: 500;
+  padding: 7px 15px; border-radius: 20px;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  color: var(--ink-2);
+  transition: background 0.25s, color 0.25s, border-color 0.25s;
+}
+.chip:hover { border-color: var(--ucol); color: var(--ink); }
+.chip.on { background: var(--ucol); color: var(--paper); border-color: transparent; }
+
+/* masonry-ish gallery */
+.gallery { max-width: 1280px; margin: 0 auto; padding: 46px 48px 140px; }
+.masonry { columns: 3; column-gap: 22px; }
+.entry {
+  break-inside: avoid;
+  margin-bottom: 22px;
+  border-radius: var(--r-md);
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
+  opacity: 0;
+  animation: rise 0.7s var(--ease) forwards;
+}
+.entry:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+.entry .ph { position: relative; width: 100%; }
+.entry .body { padding: 18px 20px 20px; }
+.entry .tag {
+  font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;
+  color: var(--ucol); margin-bottom: 9px; display: inline-block;
+}
+.entry h4 { font-size: 18px; font-weight: 500; line-height: 1.2; margin-bottom: 8px; letter-spacing: -0.01em; }
+.entry .txt { font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.entry.quote-entry .body { padding: 26px 24px; }
+.entry.quote-entry .txt {
+  font-family: var(--font-display); font-style: italic; font-size: 19px; line-height: 1.4; color: var(--ink);
+}
+.entry .foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 12px; color: var(--ink-faint); }
+.entry .foot .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--line); }
+.entry .star { position: absolute; top: 13px; right: 14px; color: var(--paper); filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)); }
+
+/* image placeholder (striped) */
+.imgph {
+  position: relative;
+  display: grid; place-items: center;
+  color: oklch(0.985 0.008 84 / 0.92);
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 11px; letter-spacing: 0.04em;
+  text-align: center;
+  overflow: hidden;
+}
+.imgph .lbl { position: relative; z-index: 2; padding: 6px 12px; border-radius: 14px; background: oklch(0.30 0.02 56 / 0.28); backdrop-filter: blur(3px); }
+
+/* ============================================================
+   Quick capture
+   ============================================================ */
+.qc-fab {
+  position: fixed;
+  right: 30px; bottom: 30px;
+  z-index: 70;
+  height: 60px;
+  padding: 0 24px 0 22px;
+  display: flex; align-items: center; gap: 12px;
+  border-radius: 32px;
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 15px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.4s var(--ease), background 0.4s, padding 0.4s var(--ease);
+}
+.qc-fab:hover { transform: translateY(-3px) scale(1.02); background: var(--terracotta-d); }
+.qc-fab .plus { font-size: 22px; line-height: 1; }
+
+.qc-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: oklch(0.30 0.02 56 / 0.30);
+  backdrop-filter: blur(7px);
+  display: grid; place-items: center;
+  padding: 30px;
+  opacity: 0;
+  animation: fade 0.4s var(--ease) forwards;
+}
+@keyframes fade { to { opacity: 1; } }
+.qc-panel {
+  width: min(620px, 100%);
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 38px 38px 30px;
+  transform: translateY(18px) scale(0.97);
+  opacity: 0;
+  animation: pop 0.55s var(--ease) forwards;
+  position: relative;
+  overflow: hidden;
+}
+@keyframes pop { to { transform: none; opacity: 1; } }
+.qc-panel .qc-art { position: absolute; top: -60px; right: -50px; width: 240px; height: 240px; opacity: 0.5; pointer-events: none; }
+.qc-panel .eyebrow { position: relative; }
+.qc-panel h3 { font-size: 27px; font-weight: 500; margin: 12px 0 22px; letter-spacing: -0.015em; max-width: 16ch; position: relative; }
+.qc-field {
+  width: 100%;
+  min-height: 130px;
+  resize: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper-2);
+  padding: 18px 20px;
+  font-size: 17px; line-height: 1.5; color: var(--ink);
+  outline: none;
+  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+}
+.qc-field::placeholder { color: var(--ink-faint); }
+.qc-field:focus { border-color: var(--terracotta); background: var(--paper); box-shadow: 0 0 0 4px var(--terracotta-w); }
+
+.qc-suggest {
+  margin-top: 18px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13.5px; color: var(--ink-soft);
+  min-height: 38px;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+}
+.qc-suggest.show { opacity: 1; transform: none; }
+.qc-suggest .ai-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--terracotta); box-shadow: 0 0 0 4px var(--terracotta-w); animation: pulse 1.8s var(--ease-soft) infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 3px var(--terracotta-w); } 50% { box-shadow: 0 0 0 7px oklch(0.905 0.038 52 / 0.4); } }
+.qc-suggest .pill {
+  font-weight: 600; color: var(--ink);
+  padding: 5px 12px; border-radius: 16px;
+  background: var(--terracotta-w);
+  display: inline-flex; align-items: center; gap: 7px;
+}
+
+.qc-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
+.qc-foot .hint { font-size: 12.5px; color: var(--ink-faint); }
+.qc-actions { display: flex; gap: 10px; }
+.btn {
+  height: 44px; padding: 0 22px;
+  border-radius: 24px;
+  font-size: 14.5px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: transform 0.3s var(--ease), background 0.3s, box-shadow 0.3s;
+}
+.btn-ghost { color: var(--ink-2); }
+.btn-ghost:hover { background: var(--cream-deep); }
+.btn-primary { background: var(--ink); color: var(--cream); box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--terracotta-d); transform: translateY(-2px); }
+.btn-primary:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%) translateY(20px);
+  z-index: 95;
+  background: var(--ink); color: var(--cream);
+  padding: 14px 22px; border-radius: 26px;
+  font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 11px;
+  opacity: 0;
+  animation: toast 3.4s var(--ease) forwards;
+}
+@keyframes toast {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  12%, 84% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+}
+
+.toast-action {
+  margin-left: 6px;
+  font-weight: 600;
+  color: var(--cream);
+  padding: 5px 12px;
+  border-radius: 16px;
+  background: oklch(0.98 0.01 84 / 0.16);
+  transition: background 0.25s;
+}
+.toast-action:hover { background: oklch(0.98 0.01 84 / 0.28); }
+
+/* ============================================================
+   Universe extras — add card, header row, entry chrome
+   ============================================================ */
+.u-hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 28px; flex-wrap: wrap; }
+.u-hero-row .chips { margin-top: 0; }
+.u-add { flex: none; height: 46px; }
+.u-add .plus { font-size: 20px; line-height: 1; margin-right: 2px; }
+
+.add-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+  min-height: 168px;
+  text-align: center;
+  border: 1.5px dashed var(--line);
+  background: color-mix(in oklch, var(--ucol, var(--terracotta)) 5%, var(--paper));
+  box-shadow: none;
+  cursor: pointer;
+}
+.add-card:hover { border-color: var(--ucol, var(--terracotta)); transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.add-plus { font-size: 34px; line-height: 1; font-weight: 300; }
+.add-label { font-size: 16px; font-weight: 500; color: var(--ink); }
+.add-sub { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.02em; }
+
+.entry-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+.entry-top .tag { margin-bottom: 0; }
+.entry-badge { font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; opacity: 0.85; }
+.foot { display: flex; align-items: center; gap: 10px; }
+.foot-sp { flex: 1; }
+.foot-fav { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; transition: color 0.2s; }
+.entry { transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease); }
+
+/* ============================================================
+   Quick capture — destinations
+   ============================================================ */
+.qc-dests { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.qc-dest {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 500;
+  padding: 7px 13px; border-radius: 18px;
+  background: var(--paper-2);
+  border: 1px solid var(--line-soft);
+  color: var(--ink-soft);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.qc-dest:hover { color: var(--ink); border-color: var(--line); }
+.qc-dest.on { border-color: var(--ucol); color: var(--ink); background: color-mix(in oklch, var(--ucol) 12%, var(--paper)); }
+.qc-dest-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.qc-foot .btn-ghost:disabled { opacity: 0.35; cursor: default; }
+
+/* ============================================================
+   Entry editor — page façon carnet
+   ============================================================ */
+.ed-overlay {
+  position: fixed; inset: 0; z-index: 92;
+  background: oklch(0.30 0.02 56 / 0.32);
+  backdrop-filter: blur(7px);
+  display: grid; place-items: center;
+  padding: 28px;
+  opacity: 0; animation: fade 0.4s var(--ease) forwards;
+}
+.ed-page {
+  width: min(720px, 100%);
+  max-height: 90vh;
+  display: flex; flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+  transform: translateY(18px) scale(0.97); opacity: 0;
+  animation: pop 0.55s var(--ease) forwards;
+}
+.ed-art { position: absolute; top: 0; right: 0; left: 0; height: 240px; opacity: 0.4; pointer-events: none; -webkit-mask-image: linear-gradient(180deg, #000, transparent); mask-image: linear-gradient(180deg, #000, transparent); }
+.ed-bar {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px 14px 26px;
+}
+.ed-loc { display: inline-flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--ink-2); }
+.ed-dot { width: 9px; height: 9px; border-radius: 50%; }
+.ed-scroll { position: relative; z-index: 2; flex: 1; overflow-y: auto; padding: 6px 38px 30px; }
+
+.ed-formats { display: flex; gap: 8px; margin-bottom: 26px; }
+.ed-fmt {
+  font-size: 13px; font-weight: 500;
+  padding: 8px 16px; border-radius: 20px;
+  background: var(--paper-2); border: 1px solid var(--line-soft); color: var(--ink-soft);
+  transition: all 0.25s var(--ease);
+}
+.ed-fmt:hover { color: var(--ink); border-color: var(--line); }
+.ed-fmt.on { background: var(--ucol); color: var(--paper); border-color: transparent; }
+
+.ed-photo { margin-bottom: 22px; }
+.ed-photo .imgph { border-radius: var(--r-md); overflow: hidden; }
+.ed-cap {
+  width: 100%; margin-top: 10px;
+  border: none; outline: none; background: none;
+  font-size: 14px; color: var(--ink-2);
+  font-family: ui-monospace, 'SF Mono', monospace;
+  padding: 4px 2px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ed-cap::placeholder { color: var(--ink-faint); }
+
+.ed-title {
+  width: 100%; border: none; outline: none; background: none;
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 34px; letter-spacing: -0.02em; color: var(--ink);
+  line-height: 1.1; padding: 4px 0; margin-bottom: 10px;
+}
+.ed-title::placeholder { color: var(--ink-faint); opacity: 0.6; }
+.ed-body {
+  width: 100%; border: none; outline: none; background: none; resize: none;
+  font-family: var(--font-sans); font-size: 17px; line-height: 1.65; color: var(--ink-2);
+  padding: 2px 0; min-height: 88px; overflow: hidden;
+}
+.ed-body::placeholder { color: var(--ink-faint); }
+.ed-body.ed-quote { font-family: var(--font-display); font-style: italic; font-size: 24px; line-height: 1.4; color: var(--ink); min-height: 120px; }
+
+.ed-section-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; color: var(--ink-faint); margin: 26px 0 12px; }
+.ed-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.ed-foot {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 16px 26px; border-top: 1px solid var(--line-soft);
+  background: var(--paper);
+  flex-wrap: wrap;
+}
+.ed-foot-left { display: flex; align-items: center; gap: 10px; }
+.ed-fav {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13.5px; font-weight: 500; color: var(--ink-soft);
+  padding: 8px 14px; border-radius: 20px; border: 1px solid var(--line-soft);
+  transition: all 0.25s;
+}
+.ed-fav:hover { color: var(--ink); border-color: var(--line); }
+.ed-fav.on { color: var(--ucol); border-color: var(--ucol); background: color-mix(in oklch, var(--ucol) 10%, var(--paper)); }
+.ed-del { font-size: 13.5px; font-weight: 500; color: var(--ink-faint); padding: 8px 12px; border-radius: 20px; transition: color 0.2s, background 0.2s; }
+.ed-del:hover { color: var(--rose); background: var(--rose-w); }
+.ed-del-confirm { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
+.ed-del-yes { color: var(--rose); font-weight: 600; padding: 6px 10px; border-radius: 14px; }
+.ed-del-yes:hover { background: var(--rose-w); }
+.ed-del-no { color: var(--ink-soft); font-weight: 500; padding: 6px 10px; border-radius: 14px; }
+.ed-del-no:hover { background: var(--cream-deep); }
+
+/* view transition */
+.view { animation: viewIn 0.6s var(--ease); }
+@keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* footer */
+.foot-note { text-align: center; padding: 40px 20px 60px; color: var(--ink-faint); font-size: 13px; }
+.foot-note .q { font-family: var(--font-display); font-style: italic; font-size: 17px; color: var(--ink-soft); margin-bottom: 14px; }
+
+/* responsive */
+@media (max-width: 980px) {
+  .col-6, .col-4, .col-8, .col-3 { grid-column: span 6; }
+  .masonry { columns: 2; }
+  .tools { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .universe-grid { grid-template-columns: 1fr; }
+  .col-6, .col-4, .col-8, .col-3 { grid-column: span 1; }
+  .masonry { columns: 1; }
+  .tools { grid-template-columns: 1fr; }
+  .dash-grid { grid-template-columns: 1fr; }
+  .section { padding: 70px 22px; }
+  .top-search { width: 44px; padding: 0; justify-content: center; }
+  .top-search input { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+
+/* BEGIN USAGE */
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+// Exports (to window): useTweaks, TweaksPanel, TweakSection, TweakRow, TweakSlider,
+//   TweakToggle, TweakRadio, TweakSelect, TweakText, TweakNumber, TweakColor, TweakButton.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// TweakRadio is the segmented control for 2–3 short options (auto-falls-back to
+// TweakSelect past ~16/~10 chars per label); reach for TweakSelect directly when
+// options are many or long. For color tweaks always curate 3-4 options rather than
+// a free picker; an option can also be a whole 2–5 color palette (the stored value
+// is the array). The Tweak* controls are a floor, not a ceiling — build custom
+// controls inside the panel if a tweak calls for UI they don't cover.
+/* END USAGE */
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
+    // can react — the parent message only reaches the host, not peers.
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-omelette-chrome=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  // Segments wrap mid-word once per-segment width runs out. The track is
+  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+  // back to a dropdown rather than wrap.
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    // <select> emits strings — map back to the original option value so the
+    // fallback stays type-preserving (numbers, booleans) like the segment path.
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
+// read on both #111 and #fafafa without per-option configuration. Hex input
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+// TweakColor — curated color/palette picker. Each option is either a single
+// hex string or an array of 1-5 hex strings; the card adapts — a lone color
+// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
+// rest stacked in a sharp column on the right. onChange emits the
+// option in the shape it was passed (string stays string, array stays array).
+// Without options it falls back to the native color input for back-compat.
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  // Native <input type=color> emits lowercase hex per the HTML spec, so
+  // compare case-insensitively. String() guards JSON.stringify(undefined),
+  // which returns the primitive undefined (no .toLowerCase).
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+</script>
+<script type="text/babel">
+// ============================================================
+// abstract.jsx — compositions abstraites inspirées d'Hilma af Klint
+// Cercles concentriques, disques superposés, orbites pointillées,
+// axes, pétales. Tout est paramétrique et recoloré par univers.
+// ============================================================
+
+// — primitives ————————————————————————————————————————————————
+
+// concentric rings around (cx,cy)
+function Rings({ cx, cy, radii, stroke, width = 1.4, opacity = 1, dash }) {
+  return (
+    <g opacity={opacity}>
+      {radii.map((r, i) => (
+        <circle key={i} cx={cx} cy={cy} r={r} fill="none"
+          stroke={stroke} strokeWidth={width}
+          strokeDasharray={dash || undefined} />
+      ))}
+    </g>
+  );
+}
+
+// ring of small dots
+function DotOrbit({ cx, cy, r, count = 16, dotR = 2.4, fill, opacity = 1 }) {
+  const dots = [];
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2;
+    dots.push(<circle key={i} cx={cx + Math.cos(a) * r} cy={cy + Math.sin(a) * r} r={dotR} fill={fill} />);
+  }
+  return <g opacity={opacity}>{dots}</g>;
+}
+
+// filled translucent disc
+function Disc({ cx, cy, r, fill, opacity = 0.5 }) {
+  return <circle cx={cx} cy={cy} r={r} fill={fill} opacity={opacity} />;
+}
+
+// half-petal arc (the upward dome motif Hilma uses a lot)
+function Dome({ cx, cy, r, stroke, width = 1.4, opacity = 1 }) {
+  return (
+    <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+      fill="none" stroke={stroke} strokeWidth={width} opacity={opacity} strokeLinecap="round" />
+  );
+}
+
+// ============================================================
+// BannerArt — la grande composition d'accueil (variantes)
+// ============================================================
+function BannerArt({ variant = "concentrique", mouse = { x: 0, y: 0 } }) {
+  const T = "var(--terracotta)";
+  const Td = "var(--terracotta-d)";
+  const S = "var(--sauge)";
+  const R = "var(--rose)";
+  const L = "var(--lavande)";
+  const A = "var(--ambre)";
+  const ink = "var(--ink-faint)";
+
+  // parallax helper — depth 0..1
+  const par = (d) => ({
+    transform: `translate(${mouse.x * d * 26}px, ${mouse.y * d * 26}px)`,
+    transition: "transform 0.6s cubic-bezier(0.22,0.61,0.36,1)",
+  });
+
+  const layers = {
+    // (1) grande sphère concentrique à droite — l'option par défaut
+    concentrique: (
+      <>
+        <g className="drift-a" style={par(0.25)}>
+          <Rings cx={1340} cy={560} radii={[360, 300, 244, 190]} stroke={T} width={1.6} opacity={0.55} />
+          <DotOrbit cx={1340} cy={560} r={420} count={40} dotR={2.2} fill={Td} opacity={0.4} />
+        </g>
+        <g className="drift-b" style={par(0.5)}>
+          <Disc cx={1340} cy={560} r={150} fill={T} opacity={0.16} />
+          <Rings cx={1340} cy={560} radii={[140, 96, 56]} stroke={Td} width={1.6} opacity={0.7} />
+          <circle cx={1340} cy={560} r={20} fill={T} opacity={0.85} />
+        </g>
+        <g className="drift-c" style={par(0.8)}>
+          <Disc cx={1010} cy={300} r={86} fill={S} opacity={0.34} />
+          <Rings cx={1010} cy={300} radii={[86, 58]} stroke={S} width={1.4} opacity={0.7} />
+        </g>
+        <g className="drift-a" style={par(0.65)}>
+          <Disc cx={1140} cy={830} r={60} fill={L} opacity={0.32} />
+          <DotOrbit cx={1140} cy={830} r={92} count={20} dotR={2} fill={L} opacity={0.5} />
+        </g>
+        <g style={par(0.15)} opacity={0.5}>
+          <line x1={1340} y1={120} x2={1340} y2={1000} stroke={ink} strokeWidth={1} strokeDasharray="2 9" />
+        </g>
+        <g className="drift-b" style={par(0.4)}>
+          <circle cx={870} cy={620} r={7} fill={A} />
+          <circle cx={1560} cy={350} r={9} fill={R} opacity={0.8} />
+          <Dome cx={1010} cy={520} r={70} stroke={A} width={1.4} opacity={0.6} />
+        </g>
+      </>
+    ),
+
+    // (2) constellation — plusieurs systèmes répartis
+    constellation: (
+      <>
+        <g style={par(0.15)} opacity={0.4}>
+          <line x1={300} y1={520} x2={1620} y2={520} stroke={ink} strokeWidth={1} strokeDasharray="2 10" />
+        </g>
+        <g className="drift-a" style={par(0.5)}>
+          <Disc cx={1430} cy={300} r={150} fill={T} opacity={0.18} />
+          <Rings cx={1430} cy={300} radii={[150, 108, 66]} stroke={Td} width={1.5} opacity={0.65} />
+          <circle cx={1430} cy={300} r={16} fill={T} />
+        </g>
+        <g className="drift-b" style={par(0.7)}>
+          <Rings cx={1080} cy={640} radii={[120, 84, 48]} stroke={S} width={1.5} opacity={0.7} />
+          <DotOrbit cx={1080} cy={640} r={150} count={26} dotR={2} fill={S} opacity={0.45} />
+        </g>
+        <g className="drift-c" style={par(0.6)}>
+          <Disc cx={1640} cy={760} r={96} fill={L} opacity={0.3} />
+          <Rings cx={1640} cy={760} radii={[96, 60]} stroke={L} width={1.4} opacity={0.7} />
+        </g>
+        <g className="drift-a" style={par(0.85)}>
+          <Disc cx={1280} cy={880} r={50} fill={A} opacity={0.4} />
+          <Dome cx={1280} cy={880} r={66} stroke={A} width={1.4} opacity={0.6} />
+        </g>
+        <g className="drift-b" style={par(0.45)}>
+          <circle cx={930} cy={340} r={8} fill={R} />
+          <circle cx={1700} cy={460} r={6} fill={T} opacity={0.8} />
+        </g>
+      </>
+    ),
+
+    // (3) ascension — axe vertical, cercles empilés (très Hilma)
+    ascension: (
+      <>
+        <g style={par(0.12)} opacity={0.5}>
+          <line x1={1300} y1={60} x2={1300} y2={1040} stroke={ink} strokeWidth={1.2} strokeDasharray="3 10" />
+        </g>
+        <g className="drift-c" style={par(0.35)}>
+          <Disc cx={1300} cy={300} r={70} fill={S} opacity={0.3} />
+          <Rings cx={1300} cy={300} radii={[70, 44]} stroke={S} width={1.4} opacity={0.7} />
+        </g>
+        <g className="drift-b" style={par(0.55)}>
+          <Disc cx={1300} cy={560} r={150} fill={T} opacity={0.18} />
+          <Rings cx={1300} cy={560} radii={[150, 110, 72, 38]} stroke={Td} width={1.6} opacity={0.65} />
+          <DotOrbit cx={1300} cy={560} r={200} count={36} dotR={2.2} fill={Td} opacity={0.4} />
+          <circle cx={1300} cy={560} r={16} fill={T} />
+        </g>
+        <g className="drift-a" style={par(0.4)}>
+          <Disc cx={1300} cy={850} r={100} fill={L} opacity={0.28} />
+          <Rings cx={1300} cy={850} radii={[100, 64]} stroke={L} width={1.4} opacity={0.65} />
+        </g>
+        <g className="drift-c" style={par(0.7)}>
+          <Dome cx={1300} cy={560} r={210} stroke={A} width={1.3} opacity={0.5} />
+          <circle cx={1080} cy={420} r={7} fill={R} />
+          <circle cx={1530} cy={700} r={8} fill={A} opacity={0.85} />
+        </g>
+      </>
+    ),
+
+    // (4) éclipse — deux grands disques en superposition
+    eclipse: (
+      <>
+        <g className="drift-a" style={par(0.4)}>
+          <Disc cx={1230} cy={540} r={300} fill={T} opacity={0.14} />
+          <Rings cx={1230} cy={540} radii={[300, 230]} stroke={Td} width={1.5} opacity={0.5} />
+        </g>
+        <g className="drift-b" style={par(0.6)}>
+          <Disc cx={1470} cy={540} r={300} fill={S} opacity={0.16} />
+          <Rings cx={1470} cy={540} radii={[300, 230]} stroke={S} width={1.5} opacity={0.55} />
+        </g>
+        <g className="drift-c" style={par(0.8)}>
+          <Disc cx={1350} cy={540} r={120} fill={L} opacity={0.22} />
+          <Rings cx={1350} cy={540} radii={[120, 78, 40]} stroke={L} width={1.5} opacity={0.7} />
+          <circle cx={1350} cy={540} r={15} fill={Td} />
+        </g>
+        <g className="drift-a" style={par(0.5)}>
+          <DotOrbit cx={1350} cy={540} r={360} count={48} dotR={2} fill={ink} opacity={0.3} />
+          <circle cx={970} cy={320} r={8} fill={A} />
+          <circle cx={1720} cy={760} r={7} fill={R} opacity={0.8} />
+        </g>
+      </>
+    ),
+  };
+
+  return (
+    <svg className="banner-art" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"
+      style={{ width: "100%", height: "100%" }} aria-hidden="true">
+      {layers[variant] || layers.concentrique}
+    </svg>
+  );
+}
+
+// ============================================================
+// UniverseGlyph — composition unique par univers (carte + héros)
+// color = couleur d'accent ; variant = 0..6
+// ============================================================
+function UniverseGlyph({ color, variant = 0, soft = false }) {
+  const o = soft ? 0.5 : 1; // atténuation dans les héros
+  const W = "var(--paper)";
+
+  const comps = [
+    // 0 — Écriture : cercle + axe d'écriture
+    (
+      <g>
+        <Disc cx={150} cy={108} r={86} fill={color} opacity={0.16} />
+        <Rings cx={150} cy={108} radii={[86, 58, 32]} stroke={color} width={1.6} opacity={0.8 * o} />
+        <line x1={60} y1={108} x2={240} y2={108} stroke={color} strokeWidth={1.2} strokeDasharray="2 7" opacity={0.6} />
+        <circle cx={150} cy={108} r={10} fill={color} />
+      </g>
+    ),
+    // 1 — Bibliothèque : disques empilés
+    (
+      <g>
+        <Disc cx={150} cy={108} r={92} fill={color} opacity={0.14} />
+        <Rings cx={150} cy={108} radii={[92, 68]} stroke={color} width={1.6} opacity={0.7 * o} />
+        <DotOrbit cx={150} cy={108} r={118} count={22} dotR={2} fill={color} opacity={0.5} />
+        <Dome cx={150} cy={120} r={48} stroke={color} width={1.6} opacity={0.85} />
+      </g>
+    ),
+    // 2 — Atelier : maille / boucles
+    (
+      <g>
+        <Rings cx={120} cy={108} radii={[70, 44]} stroke={color} width={1.6} opacity={0.8 * o} />
+        <Rings cx={188} cy={108} radii={[70, 44]} stroke={color} width={1.6} opacity={0.55 * o} />
+        <Disc cx={154} cy={108} r={26} fill={color} opacity={0.5} />
+      </g>
+    ),
+    // 3 — Généalogie : arbre de cercles
+    (
+      <g>
+        <line x1={150} y1={30} x2={150} y2={186} stroke={color} strokeWidth={1.2} opacity={0.5} />
+        <line x1={90} y1={150} x2={210} y2={150} stroke={color} strokeWidth={1.2} opacity={0.5} />
+        <Disc cx={150} cy={70} r={34} fill={color} opacity={0.18} />
+        <Rings cx={150} cy={70} radii={[34, 20]} stroke={color} width={1.5} opacity={0.8 * o} />
+        <Rings cx={90} cy={150} radii={[26]} stroke={color} width={1.5} opacity={0.7 * o} />
+        <Rings cx={210} cy={150} radii={[26]} stroke={color} width={1.5} opacity={0.7 * o} />
+        <circle cx={150} cy={70} r={7} fill={color} />
+      </g>
+    ),
+    // 4 — Voyages : orbite + point
+    (
+      <g>
+        <ellipse cx={150} cy={108} rx={108} ry={58} fill="none" stroke={color} strokeWidth={1.5} opacity={0.7 * o} />
+        <ellipse cx={150} cy={108} rx={70} ry={108} fill="none" stroke={color} strokeWidth={1.3} opacity={0.45 * o} transform="rotate(20 150 108)" />
+        <Disc cx={150} cy={108} r={34} fill={color} opacity={0.18} />
+        <circle cx={150} cy={108} r={12} fill={color} />
+        <circle cx={246} cy={86} r={6} fill={color} opacity={0.8} />
+      </g>
+    ),
+    // 5 — Cabinet des curiosités : cristal / facettes
+    (
+      <g>
+        <Disc cx={150} cy={108} r={70} fill={color} opacity={0.14} />
+        <polygon points="150,40 206,96 178,176 122,176 94,96" fill="none" stroke={color} strokeWidth={1.6} opacity={0.85 * o} />
+        <line x1={150} y1={40} x2={150} y2={176} stroke={color} strokeWidth={1.1} opacity={0.5} />
+        <line x1={94} y1={96} x2={206} y2={96} stroke={color} strokeWidth={1.1} opacity={0.5} />
+        <circle cx={150} cy={108} r={8} fill={color} />
+      </g>
+    ),
+    // 6 — Journal : lune / croissant
+    (
+      <g>
+        <Disc cx={150} cy={108} r={84} fill={color} opacity={0.16} />
+        <circle cx={150} cy={108} r={84} fill="none" stroke={color} strokeWidth={1.6} opacity={0.8 * o} />
+        <circle cx={186} cy={92} r={70} fill={W} opacity={0.9} />
+        <circle cx={186} cy={92} r={70} fill="none" stroke={color} strokeWidth={1.2} opacity={0.4} />
+        <DotOrbit cx={150} cy={108} r={108} count={18} dotR={1.8} fill={color} opacity={0.45} />
+      </g>
+    ),
+    // 7 — Notes rapides : lignes de note dans un cercle
+    (
+      <g>
+        <Disc cx={150} cy={108} r={82} fill={color} opacity={0.13} />
+        <circle cx={150} cy={108} r={82} fill="none" stroke={color} strokeWidth={1.5} opacity={0.7 * o} />
+        <line x1={104} y1={84} x2={196} y2={84} stroke={color} strokeWidth={2.4} opacity={0.75 * o} strokeLinecap="round" />
+        <line x1={104} y1={108} x2={184} y2={108} stroke={color} strokeWidth={2.4} opacity={0.55 * o} strokeLinecap="round" />
+        <line x1={104} y1={132} x2={166} y2={132} stroke={color} strokeWidth={2.4} opacity={0.4 * o} strokeLinecap="round" />
+        <circle cx={210} cy={132} r={5} fill={color} />
+      </g>
+    ),
+  ];
+
+  return (
+    <svg viewBox="0 0 300 216" preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%" }} aria-hidden="true">
+      {comps[variant % comps.length]}
+    </svg>
+  );
+}
+
+// large faint version for universe hero backgrounds
+function UniverseHeroArt({ color, variant = 0, mouse = { x: 0, y: 0 } }) {
+  const par = (d) => ({ transform: `translate(${mouse.x * d * 20}px, ${mouse.y * d * 20}px)`, transition: "transform 0.6s cubic-bezier(0.22,0.61,0.36,1)" });
+  return (
+    <svg viewBox="0 0 1920 600" preserveAspectRatio="xMidYMid slice" style={{ width: "100%", height: "100%" }} aria-hidden="true">
+      <g className="drift-a" style={par(0.4)} opacity={0.85}>
+        <Disc cx={1560} cy={260} r={240} fill={color} opacity={0.1} />
+        <Rings cx={1560} cy={260} radii={[240, 180, 124, 70]} stroke={color} width={1.6} opacity={0.4} />
+        <DotOrbit cx={1560} cy={260} r={300} count={44} dotR={2} fill={color} opacity={0.28} />
+        <circle cx={1560} cy={260} r={16} fill={color} opacity={0.6} />
+      </g>
+      <g className="drift-b" style={par(0.6)} opacity={0.7}>
+        <Disc cx={1240} cy={440} r={90} fill={color} opacity={0.12} />
+        <Rings cx={1240} cy={440} radii={[90, 56]} stroke={color} width={1.4} opacity={0.4} />
+      </g>
+      <g style={par(0.15)} opacity={0.35}>
+        <line x1={1560} y1={-40} x2={1560} y2={640} stroke="var(--ink-faint)" strokeWidth={1} strokeDasharray="2 10" />
+      </g>
+    </svg>
+  );
+}
+
+// small tool glyphs (galerie / timeline / mur / carte)
+function ToolGlyph({ kind, color }) {
+  const c = color || "var(--terracotta)";
+  const map = {
+    galerie: <g><rect x="6" y="6" width="12" height="12" rx="2" stroke={c} strokeWidth="1.6" fill="none" /><rect x="22" y="6" width="12" height="12" rx="2" stroke={c} strokeWidth="1.6" fill="none" opacity="0.6" /><rect x="6" y="22" width="12" height="12" rx="2" stroke={c} strokeWidth="1.6" fill="none" opacity="0.6" /><rect x="22" y="22" width="12" height="12" rx="2" stroke={c} strokeWidth="1.6" fill="none" /></g>,
+    timeline: <g><line x1="8" y1="20" x2="32" y2="20" stroke={c} strokeWidth="1.6" /><circle cx="11" cy="20" r="3.2" fill={c} /><circle cx="20" cy="20" r="3.2" fill="none" stroke={c} strokeWidth="1.6" /><circle cx="29" cy="20" r="3.2" fill={c} opacity="0.5" /></g>,
+    mur: <g><circle cx="14" cy="14" r="7" fill="none" stroke={c} strokeWidth="1.6" /><circle cx="28" cy="16" r="5" fill="none" stroke={c} strokeWidth="1.6" opacity="0.6" /><circle cx="18" cy="28" r="5.5" fill="none" stroke={c} strokeWidth="1.6" opacity="0.8" /></g>,
+    carte: <g><path d="M8 12 L16 8 L24 12 L32 8 L32 30 L24 34 L16 30 L8 34 Z" fill="none" stroke={c} strokeWidth="1.6" /><circle cx="20" cy="19" r="3.5" fill={c} /></g>,
+  };
+  return <svg viewBox="0 0 40 40" style={{ width: "100%", height: "100%" }} aria-hidden="true">{map[kind]}</svg>;
+}
+
+// striped image placeholder
+function ImgPlaceholder({ height = 200, label = "image", color = "var(--terracotta)" }) {
+  return (
+    <div className="imgph ph" style={{ height }}>
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <pattern id={`stripe-${label.replace(/\W/g, "")}`} width="14" height="14" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill={color} opacity="0.85" />
+            <rect width="7" height="14" fill={color} />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill={`url(#stripe-${label.replace(/\W/g, "")})`} opacity="0.55" />
+      </svg>
+      <span className="lbl">{label}</span>
+    </div>
+  );
+}
+
+Object.assign(window, { Rings, DotOrbit, Disc, Dome, BannerArt, UniverseGlyph, UniverseHeroArt, ToolGlyph, ImgPlaceholder });
+</script>
+<script type="text/babel">
+// ============================================================
+// data.jsx — contenu fictif, élégant et cohérent
+// ============================================================
+
+const UNIVERSES = [
+  {
+    id: "ecriture",
+    k: "Écriture",
+    title: "Écriture",
+    desc: "Histoires, pensées, inspirations et fragments de vie.",
+    long: "Tout ce qui naît au bout de la plume — récits commencés, phrases attrapées au vol, et les idées qui ne demandent qu'à grandir.",
+    color: "var(--terracotta)",
+    glyph: 0,
+    count: 34,
+    chips: ["Histoires", "Réflexions", "Carnet d'idées", "Citations"],
+  },
+  {
+    id: "savoir",
+    k: "Bibliothèque du savoir",
+    title: "Bibliothèque du savoir",
+    desc: "Conserver tout ce qui nourrit l'esprit.",
+    long: "Une bibliothèque vivante : psychologie, développement personnel, droit, livres lus et articles précieux que l'on garde près de soi.",
+    color: "var(--sauge-d)",
+    glyph: 1,
+    count: 58,
+    chips: ["Psychologie", "Développement", "Droit", "Livres", "Articles"],
+  },
+  {
+    id: "atelier",
+    k: "Atelier créatif",
+    title: "Atelier créatif",
+    desc: "L'espace dédié aux créations et projets artistiques.",
+    long: "Le coin des mains qui font — crochet, patrons, créations en cours et inspirations à garder pour le prochain projet.",
+    color: "var(--rose)",
+    glyph: 2,
+    count: 21,
+    chips: ["Crochet", "Patrons", "Créations", "Inspirations"],
+  },
+  {
+    id: "genealogie",
+    k: "Généalogie",
+    title: "Généalogie",
+    desc: "Préserver et transmettre la mémoire familiale.",
+    long: "Les racines et les branches — l'arbre familial, les archives, les documents et les photographies anciennes à transmettre.",
+    color: "var(--olive)",
+    glyph: 3,
+    count: 47,
+    chips: ["Arbre familial", "Archives", "Documents", "Photos anciennes"],
+  },
+  {
+    id: "voyages",
+    k: "Carnet de voyages",
+    title: "Carnet de voyages",
+    desc: "Rassembler les aventures importantes.",
+    long: "Les chemins déjà parcourus et ceux qui appellent — voyages passés, voyages rêvés, photos, souvenirs et carnets de route.",
+    color: "var(--ambre)",
+    glyph: 4,
+    count: 29,
+    chips: ["Passés", "À venir", "Photos", "Souvenirs", "Carnets"],
+  },
+  {
+    id: "curiosites",
+    k: "Cabinet des curiosités",
+    title: "Cabinet des curiosités",
+    desc: "Conserver les passions et les objets porteurs de sens.",
+    long: "Une vitrine intime — pierres, minéraux, symboliques, collections et découvertes qui portent une histoire.",
+    color: "var(--lavande)",
+    glyph: 5,
+    count: 16,
+    chips: ["Pierres", "Minéraux", "Symbolique", "Collections"],
+  },
+  {
+    id: "journal",
+    k: "Journal intime",
+    title: "Journal intime",
+    desc: "Un espace personnel et intime.",
+    long: "Le plus secret des espaces — émotions, gratitude, réflexions et les petits moments de vie que l'on ne veut pas oublier.",
+    color: "var(--prune)",
+    glyph: 6,
+    count: 92,
+    chips: ["Émotions", "Gratitude", "Réflexions", "Moments"],
+  },
+  {
+    id: "notes",
+    k: "Notes rapides",
+    title: "Notes rapides",
+    desc: "Idées, citations et notes à classer.",
+    long: "La boîte de réception de l'esprit — tout ce qu'on attrape à la volée, en attendant de lui trouver sa place ailleurs.",
+    color: "var(--honey)",
+    glyph: 7,
+    count: 11,
+    chips: ["Idées", "Citations", "À classer", "Notes"],
+  },
+];
+
+// content entries per universe. type: text | quote | photo
+const ENTRIES = {
+  ecriture: [
+    { type: "quote", tag: "Citation", txt: "On n'écrit pas pour dire les choses, mais pour les comprendre.", meta: "carnet du soir", fav: true },
+    { type: "text", tag: "Histoire", title: "La maison aux volets bleus", txt: "Premier chapitre. Elle revient toujours en été, quand le figuier ploie sous ses fruits et que le silence a le goût du sel.", meta: "brouillon · 1 240 mots" },
+    { type: "photo", tag: "Inspiration", title: "Lumière d'atelier", ph: "photo · table d'écriture", h: 220, fav: false },
+    { type: "text", tag: "Réflexion", title: "Sur la lenteur", txt: "Je crois que ralentir n'est pas perdre du temps — c'est en donner au monde la chance d'arriver jusqu'à nous.", meta: "il y a 3 jours" },
+    { type: "text", tag: "Idée", title: "Recueil : Les heures bleues", txt: "Un livre de fragments écrits entre le jour et la nuit. Format poche, papier crème, couverture sauge.", meta: "carnet d'idées" },
+    { type: "quote", tag: "Citation", txt: "Écrire, c'est laisser une trace de douceur dans le bruit.", meta: "à moi-même", fav: false },
+  ],
+  savoir: [
+    { type: "text", tag: "Psychologie", title: "L'attachement sécure", txt: "Notes de lecture — la base de sécurité permet l'exploration. On n'est jamais aussi libre que lorsqu'on se sait relié.", meta: "Bowlby · résumé", fav: true },
+    { type: "photo", tag: "Livres", title: "Pile du moment", ph: "photo · pile de livres", h: 260 },
+    { type: "quote", tag: "Apprentissage", txt: "Apprendre, c'est se souvenir de ce que l'âme savait déjà.", meta: "Platon, librement" },
+    { type: "text", tag: "Droit", title: "Le droit moral de l'auteur", txt: "Inaliénable, perpétuel, imprescriptible. Trois mots à retenir — la création reste liée à celle qui l'a faite.", meta: "fiche · 2 min" },
+    { type: "text", tag: "Développement", title: "Les quatre accords", txt: "Que ta parole soit impeccable. N'en fais pas une affaire personnelle. Ne fais pas de suppositions. Fais toujours de ton mieux.", meta: "à relire", fav: true },
+    { type: "photo", tag: "Article", title: "Neurosciences & sommeil", ph: "photo · revue", h: 200 },
+  ],
+  atelier: [
+    { type: "photo", tag: "Création", title: "Châle granny — terminé", ph: "photo · châle au crochet", h: 300, fav: true },
+    { type: "text", tag: "Patron", title: "Point nid d'abeille", txt: "Multiple de 4 + 2. Rang 1 : brides. Rang 2 : alterner brides relief avant et arrière. Garder une tension douce.", meta: "patron · enregistré" },
+    { type: "photo", tag: "Inspiration", title: "Palette automne", ph: "photo · pelotes", h: 220 },
+    { type: "text", tag: "Création", title: "Projet : couverture grand-mère", txt: "48 carrés, dégradé terracotta vers crème. Assemblage au point invisible. Pour l'hiver prochain.", meta: "en cours · 18/48" },
+    { type: "photo", tag: "Création", title: "Sac filet d'été", ph: "photo · sac au crochet", h: 240, fav: false },
+  ],
+  genealogie: [
+    { type: "photo", tag: "Photo ancienne", title: "Mariage, 1932", ph: "photo · archive sépia", h: 280, fav: true },
+    { type: "text", tag: "Archive", title: "Lettre de l'arrière-grand-mère", txt: "« Ma chère petite, le jardin a bien donné cette année. J'ai pensé à toi en cueillant les premières pêches. »", meta: "transcription · 1948" },
+    { type: "text", tag: "Arbre familial", title: "Branche maternelle", txt: "Quatre générations retrouvées jusqu'au village de Sainte-Cécile. Reste à identifier la sœur cadette.", meta: "mis à jour" },
+    { type: "photo", tag: "Document", title: "Acte de naissance", ph: "document · 1901", h: 210 },
+    { type: "photo", tag: "Photo ancienne", title: "La maison familiale", ph: "photo · façade ancienne", h: 250, fav: false },
+  ],
+  voyages: [
+    { type: "photo", tag: "Passé", title: "Cinque Terre, été", ph: "photo · village coloré", h: 300, fav: true },
+    { type: "text", tag: "Carnet", title: "Lisbonne, premier matin", txt: "Le tram 28 grimpe en grinçant. Café court, pastel de nata tiède. La ville sent la mer et les azulejos brillent après la pluie.", meta: "carnet de route" },
+    { type: "photo", tag: "À venir", title: "Kyoto au printemps", ph: "photo · rêve · temple", h: 230 },
+    { type: "text", tag: "À venir", title: "Liste : Islande", txt: "Cascade de Seljalandsfoss, sources chaudes au lever du jour, et une nuit à guetter les aurores. Septembre, peut-être.", meta: "projet" },
+    { type: "photo", tag: "Souvenir", title: "Marché de Marrakech", ph: "photo · épices", h: 250, fav: false },
+    { type: "quote", tag: "Souvenir", txt: "Le voyage ne commence pas à l'aéroport, mais le jour où l'on ose en rêver.", meta: "" },
+  ],
+  curiosites: [
+    { type: "photo", tag: "Minéral", title: "Améthyste brute", ph: "photo · géode violette", h: 250, fav: true },
+    { type: "text", tag: "Symbolique", title: "La pierre de lune", txt: "Liée à l'intuition et aux cycles. On la dit gardienne des voyageurs de nuit et des recommencements doux.", meta: "fiche" },
+    { type: "photo", tag: "Collection", title: "Galets de la baie", ph: "photo · galets gris-rose", h: 200 },
+    { type: "photo", tag: "Découverte", title: "Quartz fumé", ph: "photo · cristal", h: 270, fav: false },
+    { type: "text", tag: "Pierre", title: "Cornaline", txt: "Orange chaleureux, presque terracotta. Pierre du courage tranquille et de l'élan créatif. Trouvée à Collioure.", meta: "il y a 1 mois" },
+  ],
+  journal: [
+    { type: "text", tag: "Gratitude", title: "Trois douceurs d'aujourd'hui", txt: "Le café partagé sans rien dire. La lumière de 17h sur le mur. Un message inattendu d'une amie lointaine.", meta: "ce soir", fav: true },
+    { type: "quote", tag: "Réflexion", txt: "Crée la vie qui te fait du bien, pas celle qui en jette.", meta: "mantra", fav: true },
+    { type: "text", tag: "Émotion", title: "Une vague douce", txt: "Journée plus légère. Je crois que j'apprends à laisser les choses être ce qu'elles sont, sans tirer dessus.", meta: "hier" },
+    { type: "photo", tag: "Moment", title: "Ciel de fin de journée", ph: "photo · ciel pêche", h: 220 },
+    { type: "text", tag: "Gratitude", title: "Le jardin", txt: "Les premières tomates. L'odeur de la terre après l'arrosage. Rien d'autre à demander que ce calme-là.", meta: "dimanche" },
+  ],
+  notes: [
+    { type: "text", tag: "Idées", title: "Offrir des carnets vierges", txt: "Idée cadeau : des carnets faits main, papier crème, à offrir aux gens que j'aime pour qu'ils écrivent leur propre histoire.", meta: "à classer", fav: false },
+    { type: "quote", tag: "Citations", txt: "Note pour plus tard : ce qu'on remarque grandit. Faire attention, c'est déjà aimer.", meta: "vu quelque part", fav: true },
+    { type: "text", tag: "À classer", title: "Atelier reliure ?", txt: "Se renseigner sur un cours de reliure japonaise au printemps. Relier mes propres recueils un jour.", meta: "hier" },
+    { type: "text", tag: "Notes", title: "Playlist d'écriture", txt: "Piano feutré, pluie douce, et le silence entre les morceaux. À garder pour les matins de création.", meta: "il y a 2 jours" },
+    { type: "quote", tag: "Idées", txt: "Et si chaque pierre du cabinet avait sa petite fiche écrite à la main ?", meta: "à explorer" },
+  ],
+};
+
+// quick-capture AI classification — naive keyword routing (faux IA)
+const AI_RULES = [
+  { u: "journal", words: ["gratitude", "merci", "émotion", "ressens", "aujourd'hui", "fatigue", "joie", "triste", "heureu", "calme"] },
+  { u: "voyages", words: ["voyage", "ville", "avion", "train", "hôtel", "plage", "kyoto", "lisbonne", "italie", "islande", "découvr", "partir"] },
+  { u: "atelier", words: ["crochet", "patron", "maille", "laine", "pelote", "tricot", "créa", "couture", "projet"] },
+  { u: "savoir", words: ["livre", "article", "lu ", "psycho", "droit", "appris", "note de lecture", "étude", "apprendre"] },
+  { u: "curiosites", words: ["pierre", "minéral", "cristal", "améthyste", "quartz", "galet", "collection", "symbol"] },
+  { u: "genealogie", words: ["grand-mère", "grand-père", "famille", "ancêtre", "archive", "arbre", "généalog", "ancien"] },
+  { u: "ecriture", words: ["histoire", "écrire", "chapitre", "récit", "poème", "personnage", "roman"] },
+  { u: "notes", words: ["idée", "note", "penser à", "à classer", "rappel", "todo", "et si"] },
+];
+
+function classify(text) {
+  const t = (text || "").toLowerCase();
+  if (!t.trim()) return null;
+  let best = null, score = 0;
+  for (const rule of AI_RULES) {
+    const s = rule.words.reduce((n, w) => n + (t.includes(w) ? 1 : 0), 0);
+    if (s > score) { score = s; best = rule.u; }
+  }
+  const uid = best || "notes";
+  const u = UNIVERSES.find((x) => x.id === uid);
+  // also pick a likely tag
+  const tag = u.chips[Math.min(u.chips.length - 1, Math.floor(t.length / 18)) % u.chips.length];
+  return { universe: u, tag };
+}
+
+Object.assign(window, { UNIVERSES, ENTRIES, classify });
+</script>
+<script type="text/babel">
+// ============================================================
+// store.jsx — couche de données éditable + persistance locale
+// Tout est ajoutable / modifiable / supprimable, façon Notion.
+// ============================================================
+
+const STORE_KEY = "mivix-store-v2";
+
+let _data = null;
+const _subs = new Set();
+
+function uid() { return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function seedUniverse(uid) {
+  const base = ENTRIES[uid] || [];
+  return base.map((e, i) => ({
+    id: `${uid}-seed-${i}`,
+    universe: uid,
+    created: Date.now() - (base.length - i) * 86400000,
+    ...e,
+  }));
+}
+
+function seed() {
+  const d = {};
+  UNIVERSES.forEach((u) => { d[u.id] = seedUniverse(u.id); });
+  return d;
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // tout univers manquant (ex. ajouté après coup) est amorcé avec son contenu de base
+      UNIVERSES.forEach((u) => { if (!parsed[u.id]) parsed[u.id] = seedUniverse(u.id); });
+      return parsed;
+    }
+  } catch (e) {}
+  return seed();
+}
+
+function getStore() { if (!_data) _data = load(); return _data; }
+
+function persist() { try { localStorage.setItem(STORE_KEY, JSON.stringify(_data)); } catch (e) {} }
+
+function emit() { persist(); _subs.forEach((f) => f()); }
+
+function addEntry(universeId, entry) {
+  getStore();
+  const e = { id: uid(), universe: universeId, created: Date.now(), meta: "à l'instant", ...entry };
+  _data = { ..._data, [universeId]: [e, ...(_data[universeId] || [])] };
+  emit();
+  return e;
+}
+
+function updateEntry(id, patch) {
+  getStore();
+  const next = { ..._data };
+  for (const k of Object.keys(next)) {
+    const idx = next[k].findIndex((e) => e.id === id);
+    if (idx >= 0) {
+      next[k] = next[k].slice();
+      next[k][idx] = { ...next[k][idx], ...patch };
+      break;
+    }
+  }
+  _data = next;
+  emit();
+}
+
+function removeEntry(id) {
+  getStore();
+  const next = { ..._data };
+  for (const k of Object.keys(next)) {
+    if (next[k].some((e) => e.id === id)) { next[k] = next[k].filter((e) => e.id !== id); break; }
+  }
+  _data = next;
+  emit();
+}
+
+function resetStore() { _data = seed(); emit(); }
+
+// hook : re-render au changement du store
+function useStore() {
+  const [, force] = React.useState(0);
+  React.useEffect(() => {
+    const f = () => force((n) => n + 1);
+    _subs.add(f);
+    return () => _subs.delete(f);
+  }, []);
+  return getStore();
+}
+
+function relTime(ts) {
+  if (!ts) return "";
+  const diff = Date.now() - ts;
+  const day = 86400000;
+  if (diff < 60000) return "à l'instant";
+  if (diff < 3600000) return "il y a " + Math.floor(diff / 60000) + " min";
+  if (diff < day) return "aujourd'hui";
+  if (diff < 2 * day) return "hier";
+  if (diff < 7 * day) return "il y a " + Math.floor(diff / day) + " jours";
+  return new Date(ts).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+}
+
+Object.assign(window, { useStore, getStore, addEntry, updateEntry, removeEntry, resetStore, relTime });
+</script>
+<script type="text/babel">
+// ============================================================
+// editor.jsx — composer / éditeur d'un contenu (façon page Notion)
+// Crée ou modifie une histoire, une citation, une note, une image.
+// ============================================================
+
+const FORMATS = [
+  { type: "text", label: "Texte", hint: "Une histoire, une réflexion, une note." },
+  { type: "quote", label: "Citation", hint: "Une phrase à garder." },
+  { type: "photo", label: "Image", hint: "Une photo, un document, un souvenir visuel." },
+];
+
+function AutoTextarea({ value, onChange, placeholder, className, big, ...rest }) {
+  const ref = React.useRef(null);
+  const resize = () => { const el = ref.current; if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; } };
+  React.useEffect(resize, [value]);
+  return (
+    <textarea ref={ref} className={className} value={value} placeholder={placeholder}
+      onChange={(e) => { onChange(e.target.value); resize(); }} rows={1} {...rest} />
+  );
+}
+
+function EntryEditor({ universe, entry, prefill, onClose, onSave, onDelete }) {
+  const isNew = !entry;
+  const src = entry || prefill || null;
+  const [type, setType] = React.useState(src ? src.type : "text");
+  const [title, setTitle] = React.useState(src ? src.title || "" : "");
+  const [txt, setTxt] = React.useState(src ? src.txt || "" : "");
+  const [tag, setTag] = React.useState(src && src.tag ? src.tag : universe.chips[0]);
+  const [ph, setPh] = React.useState(src ? src.ph || "" : "");
+  const [fav, setFav] = React.useState(src ? !!src.fav : false);
+  const [confirmDel, setConfirmDel] = React.useState(false);
+  const firstRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    setTimeout(() => firstRef.current && firstRef.current.focus(), 360);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const canSave = type === "photo" ? ph.trim().length > 0 : (txt.trim().length > 0 || title.trim().length > 0);
+
+  const save = () => {
+    if (!canSave) return;
+    const data = { type, tag, fav };
+    if (type === "quote") { data.txt = txt.trim(); data.title = ""; }
+    else if (type === "photo") { data.ph = ph.trim() || "image"; data.title = title.trim(); data.txt = txt.trim(); data.h = entry && entry.h ? entry.h : 240; }
+    else { data.title = title.trim(); data.txt = txt.trim(); }
+    onSave(data);
+  };
+
+  return (
+    <div className="ed-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="ed-page" style={{ "--ucol": universe.color }}>
+        <div className="ed-art"><UniverseHeroArt color={universe.color} variant={universe.glyph} mouse={{ x: 0, y: 0 }} /></div>
+
+        <div className="ed-bar">
+          <span className="ed-loc">
+            <span className="ed-dot" style={{ background: universe.color }} />
+            {universe.title}
+          </span>
+          <button className="icon-btn" onClick={onClose} title="Fermer"><Icon name="close" /></button>
+        </div>
+
+        <div className="ed-scroll">
+          {/* format selector */}
+          <div className="ed-formats">
+            {FORMATS.map((f) => (
+              <button key={f.type} className={`ed-fmt ${type === f.type ? "on" : ""}`} onClick={() => setType(f.type)}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {type === "photo" && (
+            <div className="ed-photo">
+              <ImgPlaceholder height={220} label={ph || "ton image"} color={universe.color} />
+              <input className="ed-cap" value={ph} placeholder="Décris l'image (ex. « photo · village coloré »)…"
+                onChange={(e) => setPh(e.target.value)} />
+            </div>
+          )}
+
+          {type !== "quote" && (
+            <input ref={type !== "photo" ? firstRef : null} className="ed-title" value={title} placeholder={type === "photo" ? "Légende (facultatif)…" : "Titre…"}
+              onChange={(e) => setTitle(e.target.value)} />
+          )}
+
+          <AutoTextarea
+            value={txt} onChange={setTxt}
+            className={type === "quote" ? "ed-body ed-quote" : "ed-body"}
+            placeholder={type === "quote" ? "« La phrase que tu veux garder… »" : type === "photo" ? "Ajoute une note (facultatif)…" : "Écris ici… laisse venir les mots."}
+          />
+
+          {/* thème / tag */}
+          <div className="ed-section-label">Thème</div>
+          <div className="ed-tags">
+            {universe.chips.map((c) => (
+              <button key={c} className={`chip ${tag === c ? "on" : ""}`} onClick={() => setTag(c)}>{c}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="ed-foot">
+          <div className="ed-foot-left">
+            <button className={`ed-fav ${fav ? "on" : ""}`} onClick={() => setFav((v) => !v)}>
+              <span style={{ width: 17, height: 17, display: "inline-flex" }}>
+                <svg width="17" height="17" viewBox="0 0 24 24">{fav
+                  ? <path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.8l6.1-.7z" fill="currentColor" />
+                  : <path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.8l6.1-.7z" fill="none" stroke="currentColor" strokeWidth="1.7" />}</svg>
+              </span>
+              {fav ? "Épinglé" : "Épingler"}
+            </button>
+            {!isNew && (
+              confirmDel ? (
+                <span className="ed-del-confirm">
+                  Supprimer ?
+                  <button className="ed-del-yes" onClick={() => onDelete(entry.id)}>Oui</button>
+                  <button className="ed-del-no" onClick={() => setConfirmDel(false)}>Non</button>
+                </span>
+              ) : (
+                <button className="ed-del" onClick={() => setConfirmDel(true)}>Supprimer</button>
+              )
+            )}
+          </div>
+          <div className="qc-actions">
+            <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
+            <button className="btn btn-primary" disabled={!canSave} onClick={save}>
+              <Icon name="check" /> {isNew ? "Conserver" : "Enregistrer"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { EntryEditor, AutoTextarea });
+</script>
+<script type="text/babel">
+// ============================================================
+// app.jsx — MIVIX Central (prototype interactif)
+// ============================================================
+const { useState, useEffect, useRef, useMemo } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "bannerVariant": "concentrique",
+  "grain": true,
+  "motion": true
+}/*EDITMODE-END*/;
+
+// flat search index (live, from the store)
+function buildIndex(store) {
+  const idx = [];
+  UNIVERSES.forEach((u) => {
+    (store[u.id] || []).forEach((e) => {
+      idx.push({ u, e, title: e.title || e.txt || "", txt: e.txt || "", tag: e.tag || "" });
+    });
+  });
+  return idx;
+}
+
+// — Brand mark ————————————————————————————————————————————————
+function Mark() {
+  return (
+    <svg className="mark" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+      <circle cx="15" cy="15" r="13" fill="none" stroke="var(--terracotta)" strokeWidth="1.4" />
+      <circle cx="15" cy="15" r="8" fill="none" stroke="var(--terracotta-d)" strokeWidth="1.4" opacity="0.7" />
+      <circle cx="15" cy="15" r="3.2" fill="var(--terracotta)" />
+    </svg>
+  );
+}
+
+function Icon({ name }) {
+  const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" };
+  const paths = {
+    search: <g {...p}><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" /></g>,
+    star: <path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.8l6.1-.7z" {...p} />,
+    starFill: <path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.8l6.1-.7z" fill="currentColor" stroke="none" />,
+    user: <g {...p}><circle cx="12" cy="8.5" r="3.7" /><path d="M5.5 20c.6-3.5 3.3-5.5 6.5-5.5s5.9 2 6.5 5.5" /></g>,
+    arrow: <g {...p}><line x1="15" y1="6" x2="9" y2="12" /><line x1="9" y1="12" x2="15" y2="18" /></g>,
+    close: <g {...p}><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></g>,
+    check: <path d="M5 12.5l4.5 4.5L19 7" {...p} />,
+    spark: <g {...p}><path d="M12 4v4M12 16v4M4 12h4M16 12h4" /><circle cx="12" cy="12" r="2.4" /></g>,
+  };
+  return <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
+}
+
+// ============================================================
+// EntryCard — un contenu dans la galerie (clic = ouvrir/éditer)
+// ============================================================
+function EntryCard({ e, color, badge, onOpen, onToggleFav }) {
+  const isFav = !!e.fav;
+  return (
+    <article className={`entry ${e.type === "quote" ? "quote-entry" : ""}`} onClick={() => onOpen(e)}>
+      {e.type === "photo" && (
+        <div style={{ position: "relative" }}>
+          <ImgPlaceholder height={e.h || 220} label={e.ph || "image"} color={color} />
+          <button className="star" onClick={(ev) => { ev.stopPropagation(); onToggleFav(e); }} style={{ color: isFav ? color : "var(--paper)" }}>
+            <Icon name={isFav ? "starFill" : "star"} />
+          </button>
+        </div>
+      )}
+      <div className="body">
+        <div className="entry-top">
+          {e.tag && <span className="tag">{e.tag}</span>}
+          {badge && <span className="entry-badge" style={{ color }}>{badge}</span>}
+        </div>
+        {e.type === "quote" ? (
+          <p className="txt">« {e.txt} »</p>
+        ) : (
+          <>
+            {e.title && <h4>{e.title}</h4>}
+            {e.txt && <p className="txt">{e.txt}</p>}
+          </>
+        )}
+        <div className="foot">
+          {(e.meta || e.created) && <span>{e.meta || relTime(e.created)}</span>}
+          <span className="foot-sp" />
+          {e.type !== "photo" && (
+            <button className="foot-fav" onClick={(ev) => { ev.stopPropagation(); onToggleFav(e); }}
+              style={{ color: isFav ? color : "var(--ink-faint)" }}>
+              <span style={{ width: 15, height: 15, display: "inline-block" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24">{isFav
+                  ? <path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.8l6.1-.7z" fill="currentColor" />
+                  : <path d="M12 3.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.8l6.1-.7z" fill="none" stroke="currentColor" strokeWidth="1.7" />}</svg>
+              </span>
+              {isFav ? "Épinglé" : "Épingler"}
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ============================================================
+// Header
+// ============================================================
+function Header({ solid, onHome, onSearch, query, setQuery, results, onPick, favCount, onFav }) {
+  return (
+    <header className={`topbar ${solid ? "solid" : ""}`}>
+      <div className="brand" onClick={onHome}>
+        <Mark />
+        <span className="word">Mivix <span className="light">Central</span></span>
+      </div>
+      <div className="spacer" />
+      <div style={{ position: "relative" }}>
+        <label className="top-search">
+          <Icon name="search" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher dans tout…" />
+        </label>
+        {query.trim().length >= 2 && (
+          <div className="search-pop">
+            {results.length === 0 && <div className="search-empty">Aucun souvenir trouvé pour « {query} »</div>}
+            {results.slice(0, 7).map((r, n) => (
+              <button key={n} className="search-row" onClick={() => onPick(r)}>
+                <span className="sr-dot" style={{ background: r.u.color }} />
+                <span className="sr-txt">
+                  <span className="sr-title">{(r.title || "").slice(0, 60) || r.tag}</span>
+                  <span className="sr-u">{r.u.title}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <button className="icon-btn" title="Favoris" onClick={onFav} style={{ position: "relative" }}>
+        <Icon name="star" />
+        {favCount > 0 && <span className="fav-badge">{favCount}</span>}
+      </button>
+      <button className="icon-btn" title="Mon profil"><Icon name="user" /></button>
+    </header>
+  );
+}
+
+// ============================================================
+// Vue d'ensemble — widgets de tableau de bord (live)
+// ============================================================
+function DashWidget({ title, color, items, onOpen }) {
+  return (
+    <div className="dash-card" style={{ "--ucol": color }}>
+      <div className="dash-head">
+        <span className="dash-dot" style={{ background: color }} />
+        <h4>{title}</h4>
+      </div>
+      {items.length === 0 ? (
+        <div className="dash-empty">—</div>
+      ) : (
+        <ul className="dash-list">
+          {items.map(({ e, u }) => (
+            <li key={e.id} className="dash-item" onClick={() => onOpen(e, u)}>
+              <span className="dash-item-txt">{e.type === "quote" ? `« ${e.txt} »` : (e.title || e.txt)}</span>
+              <span className="dash-item-meta">{e.tag}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function QuoteWidget({ title, pick, onOpen }) {
+  return (
+    <div className="dash-card quote-card" style={{ "--ucol": pick ? pick.u.color : "var(--lavande)" }} onClick={() => pick && onOpen(pick.e, pick.u)}>
+      <div className="dash-head">
+        <span className="dash-dot" style={{ background: pick ? pick.u.color : "var(--lavande)" }} />
+        <h4>{title}</h4>
+      </div>
+      {pick ? (
+        <>
+          <p className="quote-card-txt">« {pick.e.txt} »</p>
+          <span className="quote-card-src">{pick.u.title}</span>
+        </>
+      ) : (
+        <div className="dash-empty">—</div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// Home
+// ============================================================
+function Home({ t, mouse, store, onOpen, onOpenEntry }) {
+  const featured = UNIVERSES;
+  // layout spans for editorial rhythm (8 univers)
+  const spans = ["col-8", "col-4", "col-4", "col-4", "col-4", "col-4", "col-4", "col-4"];
+
+  const dash = useMemo(() => {
+    const byDate = (a, b) => (b.e.created || 0) - (a.e.created || 0);
+    const withU = (uid) => (store[uid] || []).map((e) => ({ e, u: UNIVERSES.find((x) => x.id === uid) }));
+    const notes = ["notes", "ecriture", "journal"].flatMap(withU)
+      .filter(({ e }) => e.type !== "photo").sort(byDate).slice(0, 4);
+    const appr = withU("savoir").filter(({ e }) => e.type !== "photo").sort(byDate).slice(0, 4);
+    const voy = withU("voyages").filter(({ e }) => (e.tag || "").toLowerCase().includes("à venir")).sort(byDate).slice(0, 4);
+    let favQuote = null;
+    for (const u of UNIVERSES) {
+      const q = (store[u.id] || []).find((e) => e.type === "quote" && e.fav);
+      if (q) { favQuote = { e: q, u }; break; }
+    }
+    if (!favQuote) {
+      for (const u of UNIVERSES) {
+        const q = (store[u.id] || []).find((e) => e.type === "quote");
+        if (q) { favQuote = { e: q, u }; break; }
+      }
+    }
+    return { notes, appr, voy, favQuote };
+  }, [store]);
+
+  return (
+    <div className="view">
+      <section className="banner">
+        <BannerArt variant={t.bannerVariant} mouse={t.motion ? mouse : { x: 0, y: 0 }} />
+        <div className="banner-vignette" />
+        <div className="banner-inner">
+          <p className="eyebrow rise" style={{ animationDelay: "0.05s" }}>Ton univers personnel</p>
+          <h1 className="rise" style={{ animationDelay: "0.12s" }}>MIVIX Central</h1>
+          <p className="sub rise" style={{ animationDelay: "0.26s" }}>Un espace pour conserver, apprendre, créer et rêver.</p>
+          <div className="quote rise" style={{ animationDelay: "0.4s" }}>
+            <p>« Crée la vie qui te fait du bien, pas celle qui en jette. »</p>
+          </div>
+        </div>
+        <div className="scroll-cue">
+          <span>Explorer</span>
+          <svg width="16" height="22" viewBox="0 0 16 22" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M8 1v18M2 13l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow" style={{ marginBottom: 14 }}>Tes univers</p>
+            <h2>Huit lieux pour<br />tout ce qui compte.</h2>
+          </div>
+          <p>Chaque univers garde une couleur, une forme et une mémoire. Entre où tu veux — rien ne se perd.</p>
+        </div>
+
+        <div className="universe-grid">
+          {featured.map((u, i) => (
+            <article key={u.id} className={`u-card ${spans[i]}`} style={{ "--ucol": u.color }} onClick={() => onOpen(u.id)}>
+              <span className="count">{(store[u.id] || []).length} éléments</span>
+              <div className="art" style={{ background: `linear-gradient(160deg, color-mix(in oklch, ${u.color} 12%, var(--paper)), var(--paper))` }}>
+                <UniverseGlyph color={u.color} variant={u.glyph} />
+              </div>
+              <div className="meta">
+                <div className="k">{u.k}</div>
+                <h3>{u.title}</h3>
+                <p>{u.desc}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section dash-section">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow" style={{ marginBottom: 14 }}>Vue d'ensemble</p>
+            <h2>Un coup d'œil sur ta vie.</h2>
+          </div>
+          <p>Les dernières traces, rassemblées ici — pour reprendre là où tu t'es arrêtée.</p>
+        </div>
+        <div className="dash-grid">
+          <DashWidget title="Dernières notes" color="var(--terracotta)" items={dash.notes} onOpen={onOpenEntry} />
+          <DashWidget title="Derniers apprentissages" color="var(--sauge-d)" items={dash.appr} onOpen={onOpenEntry} />
+          <DashWidget title="Voyages en préparation" color="var(--ambre)" items={dash.voy} onOpen={onOpenEntry} />
+          <QuoteWidget title="Citation favorite" pick={dash.favQuote} onOpen={onOpenEntry} />
+        </div>
+      </section>
+
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="section-head">
+          <div>
+            <p className="eyebrow" style={{ marginBottom: 14 }}>Manières de regarder</p>
+            <h2>Retrouver, relier, contempler.</h2>
+          </div>
+        </div>
+        <div className="tools">
+          {[
+            { k: "galerie", t: "Galerie", d: "La vue principale, très visuelle.", c: "var(--terracotta)" },
+            { k: "timeline", t: "Timeline de vie", d: "Tout, dans l'ordre du temps.", c: "var(--sauge-d)" },
+            { k: "mur", t: "Mur d'inspiration", d: "Une mosaïque qui respire.", c: "var(--rose)" },
+            { k: "carte", t: "Carte des souvenirs", d: "Voyages et lieux, géolocalisés.", c: "var(--ambre)" },
+          ].map((tool) => (
+            <div key={tool.k} className="tool" onClick={() => onOpen("ecriture")}>
+              <div className="glyph"><ToolGlyph kind={tool.k} color={tool.c} /></div>
+              <div>
+                <h4>{tool.t}</h4>
+                <p>{tool.d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="foot-note">
+        <div className="q">« Ce que l'on garde avec amour ne vieillit jamais. »</div>
+        MIVIX Central — ton carnet de vie
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Universe detail
+// ============================================================
+function UniverseView({ u, store, mouse, t, onBack, onNew, onOpenEntry, onToggleFav }) {
+  const [active, setActive] = useState("Tout");
+  const all = store[u.id] || [];
+  const list = active === "Tout" ? all : all.filter((e) => e.tag === active);
+  const chips = ["Tout", ...u.chips.filter((c) => all.some((e) => e.tag === c))];
+  all.forEach((e) => { if (e.tag && !chips.includes(e.tag)) chips.push(e.tag); });
+
+  return (
+    <div className="view" style={{ "--ucol": u.color }}>
+      <section className="u-hero">
+        <div className="u-hero-art"><UniverseHeroArt color={u.color} variant={u.glyph} mouse={t.motion ? mouse : { x: 0, y: 0 }} /></div>
+        <div className="u-hero-inner">
+          <button className="back" onClick={onBack}><Icon name="arrow" /> Accueil</button>
+          <p className="eyebrow k">{u.k}</p>
+          <h1>{u.title}</h1>
+          <p className="desc">{u.long}</p>
+          <div className="u-hero-row">
+            <div className="chips">
+              {chips.map((c) => (
+                <button key={c} className={`chip ${active === c ? "on" : ""}`} onClick={() => setActive(c)}>{c}</button>
+              ))}
+            </div>
+            <button className="btn btn-primary u-add" onClick={() => onNew(u)}>
+              <span className="plus">+</span> Ajouter
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="gallery">
+        <div className="masonry">
+          <button className="entry add-card" onClick={() => onNew(u)}>
+            <span className="add-plus" style={{ color: u.color }}>+</span>
+            <span className="add-label">Ajouter un contenu</span>
+            <span className="add-sub">Histoire · citation · note · image</span>
+          </button>
+          {list.map((e) => (
+            <EntryCard key={e.id} e={e} color={u.color} onOpen={onOpenEntry} onToggleFav={onToggleFav} />
+          ))}
+        </div>
+        {all.length === 0 && <div className="empty-universe">Rien ici pour l'instant — et c'est très bien.<br />Touche « Ajouter » pour commencer.</div>}
+      </section>
+    </div>
+  );
+}
+
+// ============================================================
+// Favoris — tous les contenus épinglés, tous univers confondus
+// ============================================================
+function FavView({ store, mouse, t, onBack, onOpenEntry, onToggleFav }) {
+  const favs = [];
+  UNIVERSES.forEach((u) => (store[u.id] || []).forEach((e) => { if (e.fav) favs.push({ e, u }); }));
+  favs.sort((a, b) => (b.e.created || 0) - (a.e.created || 0));
+
+  return (
+    <div className="view" style={{ "--ucol": "var(--terracotta)" }}>
+      <section className="u-hero">
+        <div className="u-hero-art"><UniverseHeroArt color="var(--terracotta)" variant={0} mouse={t.motion ? mouse : { x: 0, y: 0 }} /></div>
+        <div className="u-hero-inner">
+          <button className="back" onClick={onBack}><Icon name="arrow" /> Accueil</button>
+          <p className="eyebrow k">Tes favoris</p>
+          <h1>Épinglés</h1>
+          <p className="desc">Ce que tu as choisi de garder tout près — quel que soit l'univers.</p>
+        </div>
+      </section>
+      <section className="gallery">
+        {favs.length === 0 ? (
+          <div className="empty-universe">Aucun favori pour l'instant.<br />Épingle ce qui compte avec l'étoile.</div>
+        ) : (
+          <div className="masonry">
+            {favs.map(({ e, u }) => (
+              <EntryCard key={e.id} e={e} color={u.color} badge={u.title} onOpen={(en) => onOpenEntry(en, u)} onToggleFav={onToggleFav} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ============================================================
+// Quick capture
+// ============================================================
+function QuickCapture({ open, setOpen, onCreate, onDetail }) {
+  const [text, setText] = useState("");
+  const [guess, setGuess] = useState(null);
+  const [dest, setDest] = useState(null);     // override de l'univers
+  const [touched, setTouched] = useState(false); // l'utilisatrice a choisi manuellement
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (open) setTimeout(() => ref.current && ref.current.focus(), 380);
+    if (!open) { setText(""); setGuess(null); setDest(null); setTouched(false); }
+  }, [open]);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const g = classify(text);
+      setGuess(g);
+      if (!touched && g) setDest(g.universe.id);
+    }, 280);
+    return () => clearTimeout(id);
+  }, [text, touched]);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    if (open) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  if (!open) return null;
+  const destU = UNIVERSES.find((u) => u.id === dest) || (guess && guess.universe);
+  const tag = guess ? guess.tag : (destU ? destU.chips[0] : "Note");
+
+  return (
+    <div className="qc-overlay" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+      <div className="qc-panel">
+        <div className="qc-art"><UniverseGlyph color={destU ? destU.color : "var(--terracotta)"} variant={destU ? destU.glyph : 0} soft /></div>
+        <p className="eyebrow">Capture rapide</p>
+        <h3>Que souhaites-tu conserver aujourd'hui ?</h3>
+        <textarea ref={ref} className="qc-field" value={text} onChange={(e) => setText(e.target.value)}
+          placeholder="Une pensée, une citation, un souvenir, une idée…" />
+
+        <div className={`qc-suggest ${guess ? "show" : ""}`}>
+          {guess && (
+            <>
+              <span className="ai-dot" />
+              <span>{touched ? "Tu ranges ceci dans" : "Je rangerais ceci dans"}</span>
+              <span className="pill" style={{ background: destU ? `color-mix(in oklch, ${destU.color} 18%, var(--paper))` : "var(--terracotta-w)" }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: destU ? destU.color : "var(--terracotta)", display: "inline-block" }} />
+                {destU ? destU.title : "…"}
+              </span>
+              <span style={{ color: "var(--ink-faint)" }}>· {tag}</span>
+            </>
+          )}
+        </div>
+
+        {guess && (
+          <div className="qc-dests">
+            {UNIVERSES.map((u) => (
+              <button key={u.id} className={`qc-dest ${dest === u.id ? "on" : ""}`} style={{ "--ucol": u.color }}
+                onClick={() => { setDest(u.id); setTouched(true); }} title={u.title}>
+                <span className="qc-dest-dot" style={{ background: u.color }} />
+                {u.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="qc-foot">
+          <button className="btn btn-ghost" disabled={!text.trim() || !destU} onClick={() => onDetail(destU, text, tag)}>
+            Détailler →
+          </button>
+          <div className="qc-actions">
+            <button className="btn btn-ghost" onClick={() => setOpen(false)}>Annuler</button>
+            <button className="btn btn-primary" disabled={!text.trim() || !destU} onClick={() => onCreate(destU, text, tag)}>
+              <Icon name="check" /> Conserver
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// build a quick entry from free text (capture rapide)
+function makeQuick(text, tag) {
+  const s = text.trim();
+  const wrapped = /^[«"'].+[»"']$/.test(s);
+  const shortPhrase = s.length <= 88 && !/[.!?]\s/.test(s) && s.split(/\s+/).length <= 15;
+  if (wrapped || shortPhrase) return { type: "quote", txt: s.replace(/^[«"'\s]+|[»"'\s]+$/g, ""), tag };
+  const words = s.split(/\s+/);
+  const title = words.slice(0, 7).join(" ") + (words.length > 7 ? "…" : "");
+  return { type: "text", title, txt: s, tag };
+}
+
+// ============================================================
+// App
+// ============================================================
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const store = useStore();
+  const [view, setView] = useState("home"); // "home" | "favoris" | universe id
+  const [solid, setSolid] = useState(false);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const [qc, setQc] = useState(false);
+  const [query, setQuery] = useState("");
+  const [editor, setEditor] = useState(null); // { universe, entry, prefill }
+  const [toast, setToast] = useState(null);
+
+  const index = useMemo(() => buildIndex(store), [store]);
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return index.filter((r) => (r.title + " " + r.txt + " " + r.tag + " " + r.u.title).toLowerCase().includes(q));
+  }, [query, index]);
+
+  const favCount = useMemo(
+    () => UNIVERSES.reduce((n, u) => n + (store[u.id] || []).filter((e) => e.fav).length, 0),
+    [store]
+  );
+
+  useEffect(() => {
+    const onScroll = () => setSolid(window.scrollY > (view === "home" ? window.innerHeight * 0.7 : 60));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [view]);
+
+  useEffect(() => { document.body.classList.toggle("no-grain", !t.grain); }, [t.grain]);
+  useEffect(() => { window.scrollTo(0, 0); }, [view]);
+
+  const onMouse = (e) => {
+    setMouse({ x: (e.clientX / window.innerWidth - 0.5) * 2, y: (e.clientY / window.innerHeight - 0.5) * 2 });
+  };
+
+  const showToast = (msg, color, action) => {
+    const id = Date.now();
+    setToast({ msg, color, action, id });
+    setTimeout(() => setToast((cur) => (cur && cur.id === id ? null : cur)), action ? 5200 : 3200);
+  };
+
+  const universe = (view !== "home" && view !== "favoris") ? UNIVERSES.find((u) => u.id === view) : null;
+
+  const openEntry = (e, u) => setEditor({ universe: u || UNIVERSES.find((x) => x.id === e.universe), entry: e });
+  const newEntry = (u) => setEditor({ universe: u, entry: null });
+  const toggleFav = (e) => updateEntry(e.id, { fav: !e.fav });
+
+  const saveEntry = (data) => {
+    const { universe: u, entry } = editor;
+    if (entry) { updateEntry(entry.id, data); showToast("Modifications enregistrées", u.color); }
+    else { addEntry(u.id, data); showToast(`Conservé dans ${u.title}`, u.color, { label: "Voir", onClick: () => setView(u.id) }); }
+    setEditor(null);
+  };
+  const deleteEntry = (id) => { removeEntry(id); setEditor(null); showToast("Contenu supprimé", "var(--ink-soft)"); };
+
+  const quickCreate = (u, text, tag) => {
+    addEntry(u.id, makeQuick(text, tag));
+    setQc(false);
+    showToast(`Conservé dans ${u.title}`, u.color, { label: "Voir", onClick: () => setView(u.id) });
+  };
+  const quickDetail = (u, text, tag) => {
+    setQc(false);
+    setEditor({ universe: u, entry: null, prefill: makeQuick(text, tag) });
+  };
+
+  return (
+    <div className="app" onMouseMove={onMouse}>
+      <Header
+        solid={solid || view !== "home"}
+        onHome={() => setView("home")}
+        query={query} setQuery={setQuery}
+        results={results}
+        onPick={(r) => { setQuery(""); openEntry(r.e, r.u); }}
+        favCount={favCount}
+        onFav={() => setView("favoris")}
+      />
+
+      {view === "home"
+        ? <Home t={t} mouse={mouse} store={store} onOpen={(id) => setView(id)} onOpenEntry={openEntry} />
+        : view === "favoris"
+          ? <FavView store={store} mouse={mouse} t={t} onBack={() => setView("home")} onOpenEntry={openEntry} onToggleFav={toggleFav} />
+          : <UniverseView u={universe} store={store} mouse={mouse} t={t} onBack={() => setView("home")} onNew={newEntry} onOpenEntry={openEntry} onToggleFav={toggleFav} />}
+
+      <button className="qc-fab" onClick={() => setQc(true)}>
+        <span className="plus">+</span> Capture rapide
+      </button>
+
+      <QuickCapture open={qc} setOpen={setQc} onCreate={quickCreate} onDetail={quickDetail} />
+
+      {editor && (
+        <EntryEditor universe={editor.universe} entry={editor.entry} prefill={editor.prefill}
+          onClose={() => setEditor(null)} onSave={saveEntry} onDelete={deleteEntry} />
+      )}
+
+      {toast && (
+        <div className="toast" key={toast.id}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: toast.color, display: "inline-block" }} />
+          {toast.msg}
+          {toast.action && <button className="toast-action" onClick={() => { toast.action.onClick(); setToast(null); }}>{toast.action.label}</button>}
+        </div>
+      )}
+
+      <TweaksPanel>
+        <TweakSection label="Bannière d'accueil" />
+        <TweakSelect label="Composition" value={t.bannerVariant}
+          options={[
+            { value: "concentrique", label: "Cercles concentriques" },
+            { value: "constellation", label: "Constellation" },
+            { value: "ascension", label: "Ascension (axe vertical)" },
+            { value: "eclipse", label: "Éclipse (deux disques)" },
+          ]}
+          onChange={(v) => { setTweak("bannerVariant", v); setView("home"); }} />
+        <TweakToggle label="Mouvement des formes" value={t.motion} onChange={(v) => setTweak("motion", v)} />
+        <TweakSection label="Matière" />
+        <TweakToggle label="Grain papier" value={t.grain} onChange={(v) => setTweak("grain", v)} />
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
