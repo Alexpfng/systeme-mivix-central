@@ -3,7 +3,7 @@ import App from '../app/App';
 import { useAuth } from './AuthProvider';
 
 export default function LoginPage() {
-  const { loading, session, signIn, resetPassword, signOut } = useAuth();
+  const { loading, session, authError, signIn, resetPassword, signOut } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -28,19 +28,28 @@ export default function LoginPage() {
     setError('');
     setMessage('');
 
-    const { error: signInError } = await signIn({ email, password });
-    if (signInError) setError(signInError.message);
-    setSubmitting(false);
+    try {
+      const { error: signInError } = await signIn({ email, password });
+      if (signInError) setError(signInError.message);
+    } catch (signInException) {
+      setError(signInException.message || 'La connexion a échoué.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function handlePasswordReset() {
     setError('');
     setMessage('');
-    const { error: resetError } = await resetPassword(email);
-    if (resetError) {
-      setError(resetError.message);
-    } else {
-      setMessage('Un email de réinitialisation a été envoyé.');
+    try {
+      const { error: resetError } = await resetPassword(email);
+      if (resetError) {
+        setError(resetError.message);
+      } else {
+        setMessage('Un email de réinitialisation a été envoyé.');
+      }
+    } catch (resetException) {
+      setError(resetException.message || 'La réinitialisation a échoué.');
     }
   }
 
@@ -77,6 +86,7 @@ export default function LoginPage() {
       <button type="button" onClick={handlePasswordReset}>
         Réinitialiser le mot de passe
       </button>
+      {authError && <p role="alert">{authError.message || 'Impossible de charger la session.'}</p>}
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
     </main>

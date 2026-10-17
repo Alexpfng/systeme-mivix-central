@@ -6,21 +6,39 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
-      if (!mounted) return;
-      if (error) console.error(error);
-      setSession(currentSession);
-      setLoading(false);
-    });
+    async function bootstrapSession() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (!mounted) return;
+        if (error) {
+          setSession(null);
+          setAuthError(error);
+          return;
+        }
+        setAuthError(null);
+        setSession(data?.session ?? null);
+      } catch (error) {
+        if (!mounted) return;
+        setSession(null);
+        setAuthError(error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    bootstrapSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      if (mounted) setSession(currentSession);
+      if (!mounted) return;
+      setSession(currentSession);
+      if (currentSession) setAuthError(null);
     });
 
     return () => {
@@ -34,6 +52,7 @@ export function AuthProvider({ children }) {
       session,
       user: session?.user ?? null,
       loading,
+      authError,
       signIn: (credentials) => supabase.auth.signInWithPassword(credentials),
       signOut: () => supabase.auth.signOut(),
       resetPassword: (email) =>
@@ -41,7 +60,7 @@ export function AuthProvider({ children }) {
           redirectTo: window.location.origin,
         }),
     }),
-    [loading, session],
+    [authError, loading, session],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

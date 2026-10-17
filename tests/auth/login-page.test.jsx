@@ -68,3 +68,51 @@ test('renders the application shell when a session exists', async () => {
   expect(await screen.findByText('MIVIX Central')).toBeInTheDocument();
   expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
 });
+
+test('shows a user-facing error and stops submitting when sign in rejects', async () => {
+  authState.signInWithPassword.mockRejectedValue(new Error('Auth service unavailable'));
+  renderLoginPage();
+
+  const email = await screen.findByLabelText(/email/i);
+  const password = screen.getByLabelText(/mot de passe|password/i);
+  const submit = screen.getByRole('button', { name: /connexion|sign in|se connecter/i });
+
+  fireEvent.change(email, { target: { value: 'alex@example.com' } });
+  fireEvent.change(password, { target: { value: 'secret' } });
+  fireEvent.click(submit);
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Auth service unavailable');
+  expect(submit).not.toBeDisabled();
+});
+
+test('shows a user-facing error when password reset rejects', async () => {
+  authState.resetPasswordForEmail.mockRejectedValue(new Error('Reset service unavailable'));
+  renderLoginPage();
+
+  const email = await screen.findByLabelText(/email/i);
+  fireEvent.change(email, { target: { value: 'alex@example.com' } });
+  fireEvent.click(screen.getByRole('button', { name: /réinitialiser le mot de passe/i }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Reset service unavailable');
+});
+
+test('shows a bootstrap error without blocking the loading state', async () => {
+  authState.getSession.mockResolvedValue({
+    data: { session: null },
+    error: new Error('Session storage unavailable'),
+  });
+
+  renderLoginPage();
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Session storage unavailable');
+  expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+});
+
+test('shows a bootstrap rejection without blocking the loading state', async () => {
+  authState.getSession.mockRejectedValue(new Error('Session bootstrap failed'));
+
+  renderLoginPage();
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Session bootstrap failed');
+  expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+});
