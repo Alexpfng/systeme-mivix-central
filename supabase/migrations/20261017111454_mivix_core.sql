@@ -65,6 +65,7 @@ create table public.entity_links (
   target_id uuid not null,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   unique (owner_id, source_type, source_id, target_type, target_id)
 );
 
