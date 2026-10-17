@@ -37,7 +37,7 @@ export default function MigrationDialog({
   }
 
   const finished = state.status === 'migrated';
-  const failure = state.status === 'error' || state.status === 'marker-failed' || state.status === 'remote-failed' || state.status === 'missing-user';
+  const failure = state.status === 'error' || state.status === 'backup-failed' || state.status === 'marker-failed' || state.status === 'remote-failed' || state.status === 'missing-user';
 
   return (
     <section role="dialog" aria-labelledby="migration-title" aria-describedby="migration-description">
@@ -64,6 +64,9 @@ export default function MigrationDialog({
       )}
       {state.status === 'working' && <p role="status">Importation en cours…</p>}
       {finished && <p role="status">Migration terminée. Le backup reste disponible et vos données locales sont conservées.</p>}
+      {state.status === 'backup-failed' && (
+        <p role="alert">{state.result?.error?.message} {state.result?.error?.detail}</p>
+      )}
       {state.status === 'awaiting-persistence' && (
         <p role="status">Backup créé. La persistance distante doit encore être configurée.</p>
       )}

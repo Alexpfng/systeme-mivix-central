@@ -23,4 +23,22 @@ describe('MigrationDialog', () => {
     expect(screen.getByRole('dialog')).toHaveTextContent(/localStorage indisponible/i);
     expect(screen.queryByRole('button', { name: /confirmer/i })).not.toBeInTheDocument();
   });
+
+  test('explains when the local backup cannot be exported', async () => {
+    const migrate = vi.fn(async () => ({
+      status: 'backup-failed',
+      error: {
+        message: 'Le backup local n’a pas pu être créé.',
+        detail: 'Aucune écriture distante ni marqueur local n’a été effectué.',
+      },
+    }));
+    const source = { status: 'ready', entries: [{ id: 'one' }], errors: [] };
+
+    render(<MigrationDialog source={source} migrate={migrate} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /confirmer/i }));
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toHaveTextContent(/backup local n’a pas pu être créé/i));
+    expect(screen.getByRole('dialog')).toHaveTextContent(/aucune écriture distante/i);
+  });
 });

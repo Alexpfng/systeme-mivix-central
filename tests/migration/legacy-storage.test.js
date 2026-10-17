@@ -121,6 +121,31 @@ describe('legacy MIVIX storage migration', () => {
     expect(storage.getItem(MIGRATION_MARKER_KEY)).toContain('2024-07-03T09:46:40.123Z');
   });
 
+  test('normalizes backup export exceptions without remote or marker mutations', async () => {
+    const storage = createStorage({
+      [LEGACY_STORE_KEY]: JSON.stringify({ notes: [{ id: 'n-1', type: 'text', txt: 'Note' }] }),
+    });
+    const upsert = vi.fn();
+
+    const result = await migrateLegacyStorage({
+      storage,
+      userId: '11111111-1111-4111-8111-111111111111',
+      exportBackup: vi.fn(async () => {
+        throw new Error('secret=must-not-leak');
+      }),
+      upsertContentItems: upsert,
+    });
+
+    expect(result.status).toBe('backup-failed');
+    expect(result.error).toEqual({
+      message: 'Le backup local n’a pas pu être créé.',
+      detail: 'Aucune écriture distante ni marqueur local n’a été effectué.',
+    });
+    expect(JSON.stringify(result)).not.toContain('secret=must-not-leak');
+    expect(upsert).not.toHaveBeenCalled();
+    expect(storage.getItem(MIGRATION_MARKER_KEY)).toBeNull();
+  });
+
   test('is idempotent after the migration marker is present', async () => {
     const storage = createStorage({
       [LEGACY_STORE_KEY]: JSON.stringify({ notes: [{ id: 'n-1', type: 'text', txt: 'Note' }] }),

@@ -157,6 +157,13 @@ function getMarker(storage) {
   }
 }
 
+function createBackupFailure() {
+  return {
+    message: 'Le backup local n’a pas pu être créé.',
+    detail: 'Aucune écriture distante ni marqueur local n’a été effectué.',
+  };
+}
+
 export function createBackupPayload(entries, timestamp, legacyData, idMapping = []) {
   const filename = `mivix-local-backup-${new Date(timestamp).toISOString().replace(/[:.]/g, '-')}.json`;
   const json = JSON.stringify({
@@ -212,7 +219,20 @@ export async function migrateLegacyStorage({
   const timestamp = now();
   const entries = source.entries.map((entry) => ({ ...entry, owner_id: userId }));
   const backup = createBackupPayload(entries, timestamp, source.data, source.idMapping);
-  const backupResult = await exportBackup(backup);
+  let backupResult;
+  try {
+    backupResult = await exportBackup(backup);
+  } catch {
+    const error = createBackupFailure();
+    return {
+      status: 'backup-failed',
+      entries,
+      errors: [...source.errors, error.message],
+      error,
+      backup,
+      idMapping: source.idMapping,
+    };
+  }
 
   if (typeof upsertContentItems !== 'function') {
     return { status: 'awaiting-persistence', entries, errors: source.errors, backup, backupResult, idMapping: source.idMapping };
