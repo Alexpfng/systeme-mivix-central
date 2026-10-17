@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [resetSubmitting, setResetSubmitting] = useState(false);
 
   async function handleSignOut() {
     setSubmitting(true);
@@ -67,8 +68,16 @@ export default function LoginPage() {
   async function handlePasswordReset() {
     setError('');
     setMessage('');
+
+    const normalizedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError('Saisissez une adresse email valide.');
+      return;
+    }
+
+    setResetSubmitting(true);
     try {
-      const { error: resetError } = await resetPassword(email);
+      const { error: resetError } = await resetPassword(normalizedEmail);
       if (resetError) {
         setError(getErrorMessage(resetError, 'La réinitialisation a échoué.'));
       } else {
@@ -76,6 +85,8 @@ export default function LoginPage() {
       }
     } catch (resetException) {
       setError(getErrorMessage(resetException, 'La réinitialisation a échoué.'));
+    } finally {
+      setResetSubmitting(false);
     }
   }
 
@@ -109,8 +120,8 @@ export default function LoginPage() {
           {submitting ? 'Connexion…' : 'Se connecter'}
         </button>
       </form>
-      <button type="button" onClick={handlePasswordReset}>
-        Réinitialiser le mot de passe
+      <button type="button" onClick={handlePasswordReset} disabled={resetSubmitting}>
+        {resetSubmitting ? 'Réinitialisation…' : 'Réinitialiser le mot de passe'}
       </button>
       {authError && (
         <p role="alert">{getErrorMessage(authError, 'Impossible de charger la session.')}</p>

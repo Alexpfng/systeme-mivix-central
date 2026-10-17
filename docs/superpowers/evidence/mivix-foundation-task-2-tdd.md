@@ -201,3 +201,62 @@ vite v6.0.5 building for production...
 ✓ 73 modules transformed.
 ✓ built in 571ms
 ```
+
+## P2 — Réinitialisation et transitions d’authentification
+
+Les tests complémentaires ont été ajoutés avant la correction de `handlePasswordReset` et l’ajout du scénario d’intégration `onAuthStateChange`.
+
+Commande RED exacte :
+
+```bash
+npm test -- --run tests/auth/login-page.test.jsx
+```
+
+Résultats observés avant correction : validation d’email et état de soumission du reset échouent ; le test de transition de session est déjà vert car le provider relayait déjà le callback.
+
+```text
+❯ tests/auth/login-page.test.jsx (16 tests | 2 failed) 1130ms
+
+Test Files  1 failed (1)
+Tests  2 failed | 14 passed (16)
+```
+
+Commande GREEN exacte :
+
+```bash
+npm test -- --run tests/auth/login-page.test.jsx
+```
+
+Résultat observé après correction : les 16 tests ciblés passent sans avertissement.
+
+```text
+✓ tests/auth/login-page.test.jsx (16 tests) 119ms
+
+Test Files  1 passed (1)
+Tests  16 passed (16)
+```
+
+Validation finale après les corrections P2 :
+
+```bash
+npm test -- --run
+```
+
+```text
+✓ tests/auth/supabase-config.test.js (6 tests) 2ms
+✓ tests/smoke/app-shell.test.jsx (1 test) 9ms
+✓ tests/auth/login-page.test.jsx (16 tests) 138ms
+
+Test Files  3 passed (3)
+Tests  23 passed (23)
+```
+
+```bash
+npm run build
+```
+
+```text
+vite v6.0.5 building for production...
+✓ 73 modules transformed.
+✓ built in 566ms
+```
