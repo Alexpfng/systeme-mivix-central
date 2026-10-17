@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { validateMigration } from '../../scripts/validate-core-schema.js';
 
 const migration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/20261017111454_mivix_core.sql'),
@@ -56,6 +57,28 @@ describe('MIVIX core SQL contract', () => {
     );
     expect(migration).toMatch(
       /foreign key \(owner_id, contact_id\)\s+references public\.contacts\(owner_id, id\)\s+on delete set null \(contact_id\)/,
+    );
+  });
+
+  test('rejects composite FKs that reference the wrong columns', () => {
+    const invalidMigration = migration.replace(
+      'references public.profiles(owner_id, id)',
+      'references public.profiles(id, owner_id)',
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'contacts composite profile FK must reference (owner_id, id)',
+    );
+  });
+
+  test('rejects composite FKs without ON DELETE SET NULL', () => {
+    const invalidMigration = migration.replace(
+      'on delete set null (profile_id)',
+      'on delete cascade',
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'contacts composite profile FK must use ON DELETE SET NULL',
     );
   });
 

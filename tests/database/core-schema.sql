@@ -162,7 +162,12 @@ begin
         (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'owner_id'),
         (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'profile_id')
       ]::smallint[]
-  ) then raise exception 'contacts must have owner-preserving profile FK'; end if;
+      and confkey = array[
+        (select attnum from pg_attribute where attrelid = 'public.profiles'::regclass and attname = 'owner_id'),
+        (select attnum from pg_attribute where attrelid = 'public.profiles'::regclass and attname = 'id')
+      ]::smallint[]
+      and confdeltype = 'n'
+  ) then raise exception 'contacts must have profile FK (owner_id, profile_id) REFERENCES (owner_id, id) ON DELETE SET NULL'; end if;
 
   if not exists (
     select 1 from pg_constraint
@@ -173,7 +178,12 @@ begin
         (select attnum from pg_attribute where attrelid = 'public.astrology_profiles'::regclass and attname = 'owner_id'),
         (select attnum from pg_attribute where attrelid = 'public.astrology_profiles'::regclass and attname = 'contact_id')
       ]::smallint[]
-  ) then raise exception 'astrology_profiles must have owner-preserving contact FK'; end if;
+      and confkey = array[
+        (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'owner_id'),
+        (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'id')
+      ]::smallint[]
+      and confdeltype = 'n'
+  ) then raise exception 'astrology_profiles must have contact FK (owner_id, contact_id) REFERENCES (owner_id, id) ON DELETE SET NULL'; end if;
 end;
 $$;
 

@@ -1,6 +1,6 @@
 begin;
 
-select plan(27);
+select plan(29);
 
 select tests.create_supabase_user('owner@mivix.test');
 select tests.create_supabase_user('other@mivix.test');
@@ -127,9 +127,19 @@ select is(
 );
 
 select lives_ok($sql$
-  insert into public.profiles (owner_id, display_name)
-  values (tests.get_supabase_uid('other@mivix.test'), 'Other profile');
+  insert into public.profiles (id, owner_id, display_name)
+  values ('00000000-0000-0000-0000-000000000002', tests.get_supabase_uid('other@mivix.test'), 'Other profile');
 $sql$, 'other user can insert their own profile for FK testing');
+
+select lives_ok($sql$
+  insert into public.contacts (id, owner_id, profile_id, full_name)
+  values (
+    '00000000-0000-0000-0000-000000000012',
+    tests.get_supabase_uid('other@mivix.test'),
+    '00000000-0000-0000-0000-000000000002',
+    'Other contact'
+  );
+$sql$, 'other user can insert their own contact for FK testing');
 
 select tests.authenticate_as('owner@mivix.test');
 
@@ -137,10 +147,19 @@ select throws_ok($sql$
   insert into public.contacts (owner_id, profile_id, full_name)
   values (
     tests.get_supabase_uid('owner@mivix.test'),
-    (select id from public.profiles where owner_id = tests.get_supabase_uid('other@mivix.test')),
+    '00000000-0000-0000-0000-000000000002',
     'Cross-owner relation'
   );
 $sql$, '23503', 'composite profile FK rejects a cross-owner reference');
+
+select throws_ok($sql$
+  insert into public.astrology_profiles (owner_id, contact_id, name)
+  values (
+    tests.get_supabase_uid('owner@mivix.test'),
+    '00000000-0000-0000-0000-000000000012',
+    'Cross-owner contact relation'
+  );
+$sql$, '23503', 'composite contact FK rejects a cross-owner reference');
 
 select lives_ok($sql$
   insert into storage.objects (bucket_id, name, metadata)
