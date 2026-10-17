@@ -60,11 +60,11 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
 .mivix-icon-button { position: relative; display: grid; place-items: center; width: 42px; height: 42px; padding: 0; color: var(--ink-2); border: 0; border-radius: 50%; background: transparent; }
 .mivix-icon-button:hover { background: var(--cream-deep); color: var(--ink); }
 .mivix-search:focus-within,
-button:focus-visible,
-input:focus-visible {
+.mivix-icon-button:focus-visible {
   outline: 2px solid var(--terracotta);
   outline-offset: 3px;
 }
+.mivix-search input:focus-visible { outline: 0; }
 .mivix-favorite-count { position: absolute; top: 0; right: -2px; display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; color: var(--paper); background: var(--terracotta); border-radius: 10px; font-size: 10px; font-weight: 700; }
 .mivix-main { position: relative; }
 .mivix-intro { position: relative; display: flex; align-items: center; min-height: 490px; padding: 92px clamp(24px, 9vw, 132px) 72px; overflow: hidden; background: radial-gradient(100% 130% at 78% 38%, var(--paper-2), var(--cream) 62%, var(--cream-deep)); }

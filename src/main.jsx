@@ -1,6 +1,5 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import VisualShell from './app/VisualShell';
 
 export function isVisualPreview(location = window.location, environment = import.meta.env) {
   return Boolean(environment?.DEV)
@@ -9,6 +8,7 @@ export function isVisualPreview(location = window.location, environment = import
 
 export async function bootstrap(root, location = window.location) {
   if (isVisualPreview(location, import.meta.env)) {
+    const { default: VisualShell } = await import('./app/VisualShell');
     createRoot(root).render(
       <React.StrictMode>
         <VisualShell />

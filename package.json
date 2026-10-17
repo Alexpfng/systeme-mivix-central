@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "preview": "vite preview",
     "test": "vitest",
     "build": "vite build",
     "validate:sql": "node scripts/validate-core-schema.js",

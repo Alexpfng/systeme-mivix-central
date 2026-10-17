@@ -28,3 +28,12 @@ test('enables the visual preview only in development', async () => {
   expect(isVisualPreview(location, {})).toBe(false);
   expect(isVisualPreview(location, { DEV: false })).toBe(false);
 });
+
+test('does not statically import the visual shell in the bootstrap module', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { resolve } = await import('node:path');
+  const source = readFileSync(resolve(process.cwd(), 'src/main.jsx'), 'utf8');
+
+  expect(source).not.toMatch(/import\s+VisualShell\s+from\s+['"]\.\/app\/VisualShell['"]/);
+  expect(source).toMatch(/import\(['"]\.\/app\/VisualShell['"]\)/);
+});
