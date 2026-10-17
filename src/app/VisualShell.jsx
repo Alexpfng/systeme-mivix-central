@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { GeometricArt, MivixRobot } from './GeometricArt';
 import MivixWidget from './MivixWidget';
 import { MIVIX_WIDGETS } from './mivixData';
+import ProjectsWidget from '../projects/ProjectsWidget';
 import '../styles/tokens.css';
 
 function MivixMark() {
@@ -81,20 +82,13 @@ export function VisualShell() {
           </div>
           {activeWidget ? (
             <section className={`mivix-workspace widget-${activeWidget.id}`} aria-labelledby="mivix-workspace-title">
-              <button className="mivix-back-button" type="button" onClick={() => setActiveWidget(null)}>← <span>Retour aux univers</span></button>
-              <div
-                className="mivix-workspace-card"
-                style={{ '--widget-bg': activeWidget.color, '--widget-accent': activeWidget.accent }}
-              >
-                <div className="mivix-workspace-copy">
-                  <p className="mivix-eyebrow">{activeWidget.label}</p>
-                  <h2 id="mivix-workspace-title">{activeWidget.title}</h2>
-                  <p>{activeWidget.description}</p>
-                  <span className="widget-detail">{activeWidget.detail}</span>
-                  <p className="mivix-workspace-hint">Cet espace est prêt à accueillir tes notes, photos, fichiers et prochaines idées.</p>
+              {activeWidget.id === 'projets' ? <><h2 id="mivix-workspace-title" className="sr-only">Projets transversal</h2><ProjectsWidget onBack={() => setActiveWidget(null)} /></> : <>
+                <button className="mivix-back-button" type="button" onClick={() => setActiveWidget(null)}>← <span>Retour aux univers</span></button>
+                <div className="mivix-workspace-card" style={{ '--widget-bg': activeWidget.color, '--widget-accent': activeWidget.accent }}>
+                  <div className="mivix-workspace-copy"><p className="mivix-eyebrow">{activeWidget.label}</p><h2 id="mivix-workspace-title">{activeWidget.title}</h2><p>{activeWidget.description}</p><span className="widget-detail">{activeWidget.detail}</span><p className="mivix-workspace-hint">Cet espace est prêt à accueillir tes notes, photos, fichiers et prochaines idées.</p></div>
+                  <GeometricArt kind={activeWidget.art} label={`Forme géométrique ${activeWidget.title}`} />
                 </div>
-                <GeometricArt kind={activeWidget.art} label={`Forme géométrique ${activeWidget.title}`} />
-              </div>
+              </>}
             </section>
           ) : (
             <div className="mivix-widget-grid" data-testid="mivix-widget-grid">
