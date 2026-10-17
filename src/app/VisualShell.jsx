@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { MivixRobot } from './GeometricArt';
+import { GeometricArt, MivixRobot } from './GeometricArt';
 import MivixWidget from './MivixWidget';
 import { MIVIX_WIDGETS } from './mivixData';
 import '../styles/tokens.css';
@@ -28,6 +28,7 @@ function UserIcon() {
 
 export function VisualShell() {
   const [query, setQuery] = useState('');
+  const [activeWidget, setActiveWidget] = useState(null);
   const normalizedQuery = query.trim().toLocaleLowerCase('fr');
   const visibleWidgets = useMemo(
     () => MIVIX_WIDGETS.filter((widget) => {
@@ -78,9 +79,28 @@ export function VisualShell() {
             <div><p className="mivix-eyebrow">Tes univers</p><h2 id="mivix-universes-title">Tout ce qui compte,<br />au même endroit.</h2></div>
             <p>Chaque espace garde sa couleur, sa forme et sa mémoire. Entre où tu veux — rien ne se perd.</p>
           </div>
-          <div className="mivix-widget-grid" data-testid="mivix-widget-grid">
-            {visibleWidgets.length > 0 ? visibleWidgets.map((widget) => <MivixWidget key={widget.id} widget={widget} />) : <p className="mivix-empty-search">Aucun univers ne correspond à « {query} ».</p>}
-          </div>
+          {activeWidget ? (
+            <section className={`mivix-workspace widget-${activeWidget.id}`} aria-labelledby="mivix-workspace-title">
+              <button className="mivix-back-button" type="button" onClick={() => setActiveWidget(null)}>← <span>Retour aux univers</span></button>
+              <div
+                className="mivix-workspace-card"
+                style={{ '--widget-bg': activeWidget.color, '--widget-accent': activeWidget.accent }}
+              >
+                <div className="mivix-workspace-copy">
+                  <p className="mivix-eyebrow">{activeWidget.label}</p>
+                  <h2 id="mivix-workspace-title">{activeWidget.title}</h2>
+                  <p>{activeWidget.description}</p>
+                  <span className="widget-detail">{activeWidget.detail}</span>
+                  <p className="mivix-workspace-hint">Cet espace est prêt à accueillir tes notes, photos, fichiers et prochaines idées.</p>
+                </div>
+                <GeometricArt kind={activeWidget.art} label={`Forme géométrique ${activeWidget.title}`} />
+              </div>
+            </section>
+          ) : (
+            <div className="mivix-widget-grid" data-testid="mivix-widget-grid">
+              {visibleWidgets.length > 0 ? visibleWidgets.map((widget) => <MivixWidget key={widget.id} widget={widget} onOpen={setActiveWidget} />) : <p className="mivix-empty-search">Aucun univers ne correspond à « {query} ».</p>}
+            </div>
+          )}
         </section>
 
         <section className="mivix-perspective" aria-label="Une manière douce de regarder">
