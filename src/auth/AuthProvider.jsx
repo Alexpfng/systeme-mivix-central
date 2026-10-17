@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-
-const AuthContext = createContext(null);
+import { AuthContext, useAuth } from './AuthContext';
 
 export function createContentItemsUpsert({ supabase: client, userId }) {
   return async (items) => {
@@ -86,12 +85,4 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error('useAuth must be used inside an AuthProvider');
-  }
-
-  return context;
-}
+export { useAuth } from './AuthContext';
