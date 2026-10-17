@@ -9,6 +9,7 @@ const authState = vi.hoisted(() => ({
   getSession: vi.fn(),
   signInWithPassword: vi.fn(),
   resetPasswordForEmail: vi.fn(),
+  updateUser: vi.fn(),
   signOut: vi.fn(),
   onAuthStateChange: vi.fn(),
   authChangeCallback: null,
@@ -32,12 +33,14 @@ beforeEach(() => {
   authState.getSession.mockClear();
   authState.signInWithPassword.mockClear();
   authState.resetPasswordForEmail.mockClear();
+  authState.updateUser.mockClear();
   authState.signOut.mockClear();
   authState.onAuthStateChange.mockClear();
   authState.session = null;
   authState.getSession.mockResolvedValue({ data: { session: null }, error: null });
   authState.signInWithPassword.mockResolvedValue({ error: null });
   authState.resetPasswordForEmail.mockResolvedValue({ error: null });
+  authState.updateUser.mockResolvedValue({ error: null });
   authState.signOut.mockResolvedValue({ error: null });
   authState.authChangeCallback = null;
   authState.onAuthStateChange.mockImplementation((callback) => {
@@ -93,6 +96,39 @@ test('updates the rendered app when auth state changes and signs out', async () 
   });
   expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
   expect(screen.queryByText('MIVIX Central')).not.toBeInTheDocument();
+});
+
+test('shows a new password form after a PASSWORD_RECOVERY event', async () => {
+  renderLoginPage();
+
+  expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
+  const session = { user: { email: 'alex@example.com' } };
+
+  await act(async () => {
+    authState.authChangeCallback('PASSWORD_RECOVERY', session);
+  });
+
+  expect(await screen.findByLabelText(/nouveau mot de passe/i)).toBeInTheDocument();
+  expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  expect(screen.queryByText('MIVIX Central')).not.toBeInTheDocument();
+});
+
+test('updates the password from the PASSWORD_RECOVERY form', async () => {
+  renderLoginPage();
+
+  expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
+  await act(async () => {
+    authState.authChangeCallback('PASSWORD_RECOVERY', { user: { email: 'alex@example.com' } });
+  });
+
+  fireEvent.change(screen.getByLabelText(/nouveau mot de passe/i), {
+    target: { value: 'new-secret' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /enregistrer le nouveau mot de passe/i }));
+
+  await waitFor(() => {
+    expect(authState.updateUser).toHaveBeenCalledWith({ password: 'new-secret' });
+  });
 });
 
 test('shows a user-facing error and stops submitting when sign out rejects', async () => {

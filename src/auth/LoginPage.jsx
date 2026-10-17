@@ -11,13 +11,24 @@ function getErrorMessage(error, fallback) {
 }
 
 export default function LoginPage() {
-  const { loading, session, authError, signIn, resetPassword, signOut } = useAuth();
+  const {
+    loading,
+    session,
+    isPasswordRecovery,
+    authError,
+    signIn,
+    resetPassword,
+    updatePassword,
+    signOut,
+  } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [resetSubmitting, setResetSubmitting] = useState(false);
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
   async function handleSignOut() {
     setSubmitting(true);
@@ -37,6 +48,52 @@ export default function LoginPage() {
   }
 
   if (loading) return <p>Chargement…</p>;
+
+  async function handlePasswordUpdate(event) {
+    event.preventDefault();
+    setPasswordSubmitting(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error: updateError } = await updatePassword(newPassword);
+      if (updateError) {
+        setError(getErrorMessage(updateError, 'La mise à jour du mot de passe a échoué.'));
+      } else {
+        setMessage('Votre nouveau mot de passe a été enregistré.');
+      }
+    } catch (updateException) {
+      setError(getErrorMessage(updateException, 'La mise à jour du mot de passe a échoué.'));
+    } finally {
+      setPasswordSubmitting(false);
+    }
+  }
+
+  if (session && isPasswordRecovery) {
+    return (
+      <main>
+        <h1>Choisir un nouveau mot de passe</h1>
+        <form onSubmit={handlePasswordUpdate}>
+          <label htmlFor="new-password">Nouveau mot de passe</label>
+          <input
+            id="new-password"
+            name="new-password"
+            type="password"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            required
+          />
+          <button type="submit" disabled={passwordSubmitting}>
+            {passwordSubmitting ? 'Enregistrement…' : 'Enregistrer le nouveau mot de passe'}
+          </button>
+        </form>
+        {error && <p role="alert">{error}</p>}
+        {message && <p role="status">{message}</p>}
+      </main>
+    );
+  }
+
   if (session) {
     return (
       <>

@@ -260,3 +260,41 @@ vite v6.0.5 building for production...
 ✓ 73 modules transformed.
 ✓ built in 566ms
 ```
+
+## P1 — PASSWORD_RECOVERY et nouveau mot de passe
+
+Les tests de régression ont été ajoutés avant l’implémentation du traitement de
+`PASSWORD_RECOVERY` et de l’appel `auth.updateUser({ password })`.
+
+Commande RED exacte :
+
+```bash
+npm test -- --run tests/auth/login-page.test.jsx
+```
+
+Résultat observé avant correction : les 2 nouveaux tests échouent, tandis que
+les 16 tests existants passent. Le formulaire de nouveau mot de passe n’est pas
+rendu après `PASSWORD_RECOVERY`.
+
+```text
+❯ tests/auth/login-page.test.jsx (18 tests | 2 failed)
+Tests 2 failed | 16 passed (18)
+```
+
+Commande GREEN exacte :
+
+```bash
+npm test -- --run tests/auth/login-page.test.jsx
+```
+
+Résultat observé après correction : les 18 tests passent.
+
+```text
+✓ tests/auth/login-page.test.jsx (18 tests)
+Tests 18 passed (18)
+```
+
+La correction conserve les flux sign-in, sign-out et reset email, et ajoute un
+état de récupération piloté par l’événement Supabase `PASSWORD_RECOVERY`. Le
+formulaire appelle `auth.updateUser({ password })` via le provider et traite
+les erreurs et états de soumission comme les autres actions d’authentification.
