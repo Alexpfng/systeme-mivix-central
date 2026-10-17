@@ -135,3 +135,69 @@ vite v6.0.5 building for production...
 ✓ 73 modules transformed.
 ✓ built in 576ms
 ```
+
+## P1 — Sign-out, exceptions et configuration complète
+
+Les tests complémentaires ont été ajoutés avant la correction de `LoginPage`.
+
+Commande RED exacte :
+
+```bash
+npm test -- --run tests/auth/login-page.test.jsx tests/auth/supabase-config.test.js
+```
+
+Résultats observés avant correction : les cas de rejet `signOut` et les exceptions primitives/null échouent, avec deux erreurs non gérées. Les six tests de configuration sont déjà verts car le validateur existait ; ils complètent sa couverture URL HTTP, URL malformée, espaces et configuration valide.
+
+```text
+✓ tests/auth/supabase-config.test.js (6 tests) 2ms
+❯ tests/auth/login-page.test.jsx (13 tests | 3 failed) 3125ms
+
+Test Files  1 failed | 1 passed (2)
+Tests  3 failed | 16 passed (19)
+Errors  2 errors
+```
+
+Commande GREEN exacte :
+
+```bash
+npm test -- --run tests/auth/login-page.test.jsx tests/auth/supabase-config.test.js
+```
+
+Résultat observé après correction : les 19 tests ciblés passent.
+
+```text
+✓ tests/auth/supabase-config.test.js (6 tests) 2ms
+✓ tests/auth/login-page.test.jsx (13 tests) 103ms
+
+Test Files  2 passed (2)
+Tests  19 passed (19)
+```
+
+## Validation finale après ces corrections
+
+Suite complète :
+
+```bash
+npm test -- --run
+```
+
+```text
+✓ tests/auth/supabase-config.test.js (6 tests) 3ms
+✓ tests/smoke/app-shell.test.jsx (1 test) 12ms
+✓ tests/auth/login-page.test.jsx (13 tests) 119ms
+
+Test Files  3 passed (3)
+Tests  20 passed (20)
+```
+
+Build :
+
+```bash
+npm run build
+```
+
+```text
+vite v6.0.5 building for production...
+✓ 73 modules transformed.
+✓ built in 571ms
+```

@@ -69,6 +69,24 @@ test('renders the application shell when a session exists', async () => {
   expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
 });
 
+test('shows a user-facing error and stops submitting when sign out rejects', async () => {
+  authState.getSession.mockResolvedValue({
+    data: { session: { user: { email: 'alex@example.com' } } },
+    error: null,
+  });
+  authState.signOut.mockRejectedValue(new Error('Sign out unavailable'));
+
+  renderLoginPage();
+
+  expect(await screen.findByText('MIVIX Central')).toBeInTheDocument();
+  const signOut = screen.getByRole('button', { name: /se déconnecter/i });
+  fireEvent.click(signOut);
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Sign out unavailable');
+  expect(signOut).not.toBeDisabled();
+  expect(screen.getByText('MIVIX Central')).toBeInTheDocument();
+});
+
 test('shows a user-facing error and stops submitting when sign in rejects', async () => {
   authState.signInWithPassword.mockRejectedValue(new Error('Auth service unavailable'));
   renderLoginPage();
@@ -85,6 +103,23 @@ test('shows a user-facing error and stops submitting when sign in rejects', asyn
   expect(submit).not.toBeDisabled();
 });
 
+test.each([null, 'unexpected failure', 42])(
+  'uses a fallback when sign in rejects with %p', async (exception) => {
+    authState.signInWithPassword.mockRejectedValue(exception);
+    renderLoginPage();
+
+    const email = await screen.findByLabelText(/email/i);
+    const password = screen.getByLabelText(/mot de passe|password/i);
+    const submit = screen.getByRole('button', { name: /connexion|sign in|se connecter/i });
+    fireEvent.change(email, { target: { value: 'alex@example.com' } });
+    fireEvent.change(password, { target: { value: 'secret' } });
+    fireEvent.click(submit);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('La connexion a échoué.');
+    expect(submit).not.toBeDisabled();
+  },
+);
+
 test('shows a user-facing error when password reset rejects', async () => {
   authState.resetPasswordForEmail.mockRejectedValue(new Error('Reset service unavailable'));
   renderLoginPage();
@@ -95,6 +130,19 @@ test('shows a user-facing error when password reset rejects', async () => {
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Reset service unavailable');
 });
+
+test.each([null, 'unexpected failure', 42])(
+  'uses a fallback when password reset rejects with %p', async (exception) => {
+    authState.resetPasswordForEmail.mockRejectedValue(exception);
+    renderLoginPage();
+
+    const email = await screen.findByLabelText(/email/i);
+    fireEvent.change(email, { target: { value: 'alex@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /réinitialiser le mot de passe/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('La réinitialisation a échoué.');
+  },
+);
 
 test('shows a bootstrap error without blocking the loading state', async () => {
   authState.getSession.mockResolvedValue({

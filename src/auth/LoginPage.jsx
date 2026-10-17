@@ -2,6 +2,14 @@ import { useState } from 'react';
 import App from '../app/App';
 import { useAuth } from './AuthProvider';
 
+function getErrorMessage(error, fallback) {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === 'object' && typeof error.message === 'string' && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function LoginPage() {
   const { loading, session, authError, signIn, resetPassword, signOut } = useAuth();
   const [email, setEmail] = useState('');
@@ -10,14 +18,32 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  async function handleSignOut() {
+    setSubmitting(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error: signOutError } = await signOut();
+      if (signOutError) {
+        setError(getErrorMessage(signOutError, 'La déconnexion a échoué.'));
+      }
+    } catch (signOutException) {
+      setError(getErrorMessage(signOutException, 'La déconnexion a échoué.'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   if (loading) return <p>Chargement…</p>;
   if (session) {
     return (
       <>
         <App />
-        <button type="button" onClick={signOut}>
-          Se déconnecter
+        <button type="button" onClick={handleSignOut} disabled={submitting}>
+          {submitting ? 'Déconnexion…' : 'Se déconnecter'}
         </button>
+        {error && <p role="alert">{error}</p>}
       </>
     );
   }
@@ -30,9 +56,9 @@ export default function LoginPage() {
 
     try {
       const { error: signInError } = await signIn({ email, password });
-      if (signInError) setError(signInError.message);
+      if (signInError) setError(getErrorMessage(signInError, 'La connexion a échoué.'));
     } catch (signInException) {
-      setError(signInException.message || 'La connexion a échoué.');
+      setError(getErrorMessage(signInException, 'La connexion a échoué.'));
     } finally {
       setSubmitting(false);
     }
@@ -44,12 +70,12 @@ export default function LoginPage() {
     try {
       const { error: resetError } = await resetPassword(email);
       if (resetError) {
-        setError(resetError.message);
+        setError(getErrorMessage(resetError, 'La réinitialisation a échoué.'));
       } else {
         setMessage('Un email de réinitialisation a été envoyé.');
       }
     } catch (resetException) {
-      setError(resetException.message || 'La réinitialisation a échoué.');
+      setError(getErrorMessage(resetException, 'La réinitialisation a échoué.'));
     }
   }
 
@@ -86,7 +112,9 @@ export default function LoginPage() {
       <button type="button" onClick={handlePasswordReset}>
         Réinitialiser le mot de passe
       </button>
-      {authError && <p role="alert">{authError.message || 'Impossible de charger la session.'}</p>}
+      {authError && (
+        <p role="alert">{getErrorMessage(authError, 'Impossible de charger la session.')}</p>
+      )}
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
     </main>
