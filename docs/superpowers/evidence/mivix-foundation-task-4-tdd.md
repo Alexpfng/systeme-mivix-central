@@ -14,8 +14,8 @@ Les tests ont d’abord été étendus dans `tests/migration/legacy-storage.test
 Après implémentation minimale puis corrections guidées par les assertions :
 
 - Tests ciblés migration + upsert + shell : **4 fichiers, 13 tests passés**.
-- Suite complète `npm test -- --run` : **8 fichiers, 59 tests passés**.
-- `npm run build` avec les variables Supabase de test : build Vite réussi.
+- Suite complète `npm test -- --run`, sans variables personnelles : **8 fichiers, 61 tests passés**.
+- `npm run build`, sans variables personnelles : build Vite réussi (**75 modules transformés**).
 - `git diff --check` : aucune erreur.
 
 ## Garanties couvertes
