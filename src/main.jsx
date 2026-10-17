@@ -1,9 +1,12 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './app/App';
+import { AuthProvider } from './auth/AuthProvider';
+import LoginPage from './auth/LoginPage';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <LoginPage />
+    </AuthProvider>
   </React.StrictMode>,
 );
