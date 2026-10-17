@@ -13,6 +13,7 @@ function statusMessage(status) {
 
 export default function MigrationDialog({
   storage,
+  userId,
   source: providedSource,
   migrate = migrateLegacyStorage,
   upsertContentItems,
@@ -27,7 +28,7 @@ export default function MigrationDialog({
   async function confirmMigration() {
     setState({ status: 'working', result: null });
     try {
-      const result = await migrate({ storage, upsertContentItems, exportBackup });
+      const result = await migrate({ storage, userId, upsertContentItems, exportBackup });
       setState({ status: result.status, result });
       onComplete?.(result);
     } catch (error) {
@@ -36,7 +37,7 @@ export default function MigrationDialog({
   }
 
   const finished = state.status === 'migrated';
-  const failure = state.status === 'error' || state.status === 'marker-failed';
+  const failure = state.status === 'error' || state.status === 'marker-failed' || state.status === 'remote-failed' || state.status === 'missing-user';
 
   return (
     <section role="dialog" aria-labelledby="migration-title" aria-describedby="migration-description">
@@ -65,6 +66,15 @@ export default function MigrationDialog({
       {finished && <p role="status">Migration terminée. Le backup reste disponible et vos données locales sont conservées.</p>}
       {state.status === 'awaiting-persistence' && (
         <p role="status">Backup créé. La persistance distante doit encore être configurée.</p>
+      )}
+      {state.status === 'remote-failed' && (
+        <p role="alert">La persistance distante a échoué. Le backup est conservé et le marqueur local n’a pas été écrit.</p>
+      )}
+      {state.status === 'missing-user' && (
+        <p role="alert">Aucun utilisateur authentifié : l’importation est refusée.</p>
+      )}
+      {state.status === 'marker-failed' && (
+        <p role="alert">Les données distantes sont enregistrées, mais le marqueur local a échoué. Une nouvelle tentative réutilisera les mêmes IDs pour éviter les doublons.</p>
       )}
       {failure && <p role="alert">La migration n’est pas confirmée. Vos données locales restent intactes.</p>}
     </section>

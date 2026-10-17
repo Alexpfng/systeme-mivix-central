@@ -3,6 +3,18 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
+export function createContentItemsUpsert({ supabase: client, userId }) {
+  return async (items) => {
+    if (!userId) throw new Error('Utilisateur authentifié requis pour importer les données.');
+    const rows = items.map((item) => ({ ...item, owner_id: userId }));
+    const { data, error } = await client
+      .from('content_items')
+      .upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+    return data ?? rows;
+  };
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
@@ -59,6 +71,7 @@ export function AuthProvider({ children }) {
       isPasswordRecovery,
       loading,
       authError,
+      upsertContentItems: createContentItemsUpsert({ supabase, userId: session?.user?.id }),
       signIn: (credentials) => supabase.auth.signInWithPassword(credentials),
       signOut: () => supabase.auth.signOut(),
       updatePassword: (password) => supabase.auth.updateUser({ password }),

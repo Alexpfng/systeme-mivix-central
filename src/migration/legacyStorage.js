@@ -1,11 +1,32 @@
 export const LEGACY_STORE_KEY = 'mivix-store-v2';
 export const MIGRATION_MARKER_KEY = 'mivix-content-items-migration-v1';
-export const MIGRATION_VERSION = 1;
+export const MIGRATION_VERSION = 2;
 
 const DEFAULT_LEGACY_KEYS = [LEGACY_STORE_KEY, 'mivix-store', 'mivix'];
 const CORE_FIELDS = new Set(['id', 'universe', 'created', 'type', 'title', 'txt', 'tag', 'fav']);
 const ATTACHMENT_KEYS = ['attachment', 'attachments', 'file', 'files', 'media', 'asset', 'assets'];
 const REFERENCE_KEYS = ['reference', 'references', 'ref', 'refs', 'source', 'sources', 'url', 'urls'];
+
+function hash32(value, seed) {
+  let hash = seed >>> 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function hex32(value) {
+  return value.toString(16).padStart(8, '0');
+}
+
+export function legacyIdToUuid(universeId, legacyId) {
+  const source = `${String(universeId)}\u0000${String(legacyId)}`;
+  const words = [2166136261, 2246822519, 3266489917, 668265263]
+    .map((seed) => hash32(source, seed));
+  const hex = words.map(hex32).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${(8 | (Number.parseInt(hex.slice(16, 17), 16) & 0x3)).toString(16)}${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
 
 function resolveStorage(storage) {
   if (storage !== undefined) return storage;
@@ -52,7 +73,10 @@ function parseCreatedAt(value) {
 function convertEntry(entry, universeId) {
   if (!entry || typeof entry !== 'object' || Array.isArray(entry) || !entry.id) return null;
 
-  const legacy = Object.fromEntries(Object.entries(entry).filter(([key]) => !CORE_FIELDS.has(key)));
+  const legacy = {
+    id: String(entry.id),
+    ...Object.fromEntries(Object.entries(entry).filter(([key]) => !CORE_FIELDS.has(key))),
+  };
   const attachments = pickExisting(entry, ATTACHMENT_KEYS);
   const references = pickExisting(entry, REFERENCE_KEYS);
   const metadata = {
@@ -66,7 +90,8 @@ function convertEntry(entry, universeId) {
 
   const createdAt = parseCreatedAt(entry.created);
   return {
-    id: String(entry.id),
+    id: legacyIdToUuid(entry.universe || universeId, entry.id),
+    owner_id: null,
     title: typeof entry.title === 'string' ? entry.title : null,
     content_type: typeof entry.type === 'string' && entry.type.trim() ? entry.type : 'text',
     body: typeof entry.txt === 'string' ? entry.txt : null,
@@ -93,6 +118,7 @@ export function readLegacyStorage(storage, { legacyKeys = DEFAULT_LEGACY_KEYS } 
       }
 
       const entries = [];
+      const idMapping = [];
       const errors = [];
       for (const [universeId, universeEntries] of Object.entries(parsed)) {
         if (!Array.isArray(universeEntries)) {
@@ -101,11 +127,18 @@ export function readLegacyStorage(storage, { legacyKeys = DEFAULT_LEGACY_KEYS } 
         }
         universeEntries.forEach((entry, index) => {
           const converted = convertEntry(entry, universeId);
-          if (converted) entries.push(converted);
+          if (converted) {
+            entries.push(converted);
+            idMapping.push({
+              legacyId: converted.metadata.legacy.id,
+              universeId: converted.metadata.universe,
+              id: converted.id,
+            });
+          }
           else errors.push(`${universeId}[${index}] ignoré : entrée invalide ou sans id.`);
         });
       }
-      return { status: 'ready', key, data: parsed, entries, errors };
+      return { status: 'ready', key, data: parsed, entries, errors, idMapping };
     } catch {
       return { status: 'invalid', entries: [], errors: [`${key} contient un JSON invalide.`] };
     }
@@ -124,13 +157,14 @@ function getMarker(storage) {
   }
 }
 
-export function createBackupPayload(entries, timestamp, legacyData) {
+export function createBackupPayload(entries, timestamp, legacyData, idMapping = []) {
   const filename = `mivix-local-backup-${new Date(timestamp).toISOString().replace(/[:.]/g, '-')}.json`;
   const json = JSON.stringify({
     exportedAt: new Date(timestamp).toISOString(),
     source: LEGACY_STORE_KEY,
     legacyData,
     entries,
+    idMapping,
   }, null, 2);
   return { filename, json };
 }
@@ -153,6 +187,7 @@ export async function migrateLegacyStorage({
   storage,
   legacyKeys,
   upsertContentItems,
+  userId,
   exportBackup = downloadBackup,
   now = () => Date.now(),
 } = {}) {
@@ -165,26 +200,57 @@ export async function migrateLegacyStorage({
   const source = readLegacyStorage(target, { legacyKeys });
   if (source.status === 'missing') return { status: 'empty', entries: [], errors: [] };
   if (source.status === 'invalid') return source;
+  if (!userId) {
+    return {
+      status: 'missing-user',
+      entries: source.entries,
+      errors: [...source.errors, 'Utilisateur authentifié requis pour importer les données.'],
+      idMapping: source.idMapping,
+    };
+  }
 
   const timestamp = now();
-  const backup = createBackupPayload(source.entries, timestamp, source.data);
+  const entries = source.entries.map((entry) => ({ ...entry, owner_id: userId }));
+  const backup = createBackupPayload(entries, timestamp, source.data, source.idMapping);
   const backupResult = await exportBackup(backup);
 
   if (typeof upsertContentItems !== 'function') {
-    return { status: 'awaiting-persistence', entries: source.entries, errors: source.errors, backup, backupResult };
+    return { status: 'awaiting-persistence', entries, errors: source.errors, backup, backupResult, idMapping: source.idMapping };
   }
 
-  const remoteResult = await upsertContentItems(source.entries);
+  let remoteResult;
+  try {
+    remoteResult = await upsertContentItems(entries);
+  } catch (error) {
+    return {
+      status: 'remote-failed',
+      entries,
+      errors: source.errors,
+      error,
+      backup,
+      backupResult,
+      idMapping: source.idMapping,
+    };
+  }
   const markerValue = {
     version: MIGRATION_VERSION,
     migratedAt: new Date(timestamp).toISOString(),
     sourceKey: source.key,
-    count: source.entries.length,
+    count: entries.length,
     backupFilename: backup.filename,
+    idMapping: source.idMapping,
   };
   if (!safeSet(target, MIGRATION_MARKER_KEY, JSON.stringify(markerValue))) {
-    return { status: 'marker-failed', entries: source.entries, errors: [...source.errors, 'Impossible d’enregistrer le marqueur local.'], backup, remoteResult };
+    return {
+      status: 'marker-failed',
+      entries,
+      errors: [...source.errors, 'Impossible d’enregistrer le marqueur local. Les IDs déterministes évitent les doublons lors d’une nouvelle tentative.'],
+      backup,
+      backupResult,
+      remoteResult,
+      idMapping: source.idMapping,
+    };
   }
 
-  return { status: 'migrated', entries: source.entries, errors: source.errors, backup, backupResult, remoteResult, marker: markerValue };
+  return { status: 'migrated', entries, errors: source.errors, backup, backupResult, remoteResult, marker: markerValue, idMapping: source.idMapping };
 }

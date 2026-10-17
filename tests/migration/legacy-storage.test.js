@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import {
   LEGACY_STORE_KEY,
   MIGRATION_MARKER_KEY,
+  legacyIdToUuid,
   migrateLegacyStorage,
   readLegacyStorage,
 } from '../../src/migration/legacyStorage';
@@ -21,7 +22,7 @@ function createStorage(initial = {}) {
 }
 
 describe('legacy MIVIX storage migration', () => {
-  test('converts universe entries while preserving identity and legacy fields', async () => {
+  test('maps every legacy identity to a deterministic UUID v4 and preserves the legacy id', async () => {
     const storage = createStorage({
       [LEGACY_STORE_KEY]: JSON.stringify({
         ecriture: [{
@@ -42,12 +43,19 @@ describe('legacy MIVIX storage migration', () => {
     });
     const upsert = vi.fn(async (items) => items);
 
-    const result = await migrateLegacyStorage({ storage, upsertContentItems: upsert, now: () => 1720000000000 });
+    const result = await migrateLegacyStorage({
+      storage,
+      userId: '11111111-1111-4111-8111-111111111111',
+      upsertContentItems: upsert,
+      now: () => 1720000000000,
+    });
 
     expect(result.status).toBe('migrated');
     expect(upsert).toHaveBeenCalledTimes(1);
-    expect(upsert.mock.calls[0][0]).toEqual([expect.objectContaining({
-      id: 'legacy-entry-1',
+    const migrated = upsert.mock.calls[0][0][0];
+    expect(migrated).toEqual(expect.objectContaining({
+      id: legacyIdToUuid('ecriture', 'legacy-entry-1'),
+      owner_id: '11111111-1111-4111-8111-111111111111',
       title: 'Carnet bleu',
       content_type: 'photo',
       body: 'Une note conservée',
@@ -56,11 +64,32 @@ describe('legacy MIVIX storage migration', () => {
       metadata: expect.objectContaining({
         universe: 'ecriture',
         favorite: true,
-        legacy: expect.objectContaining({ ph: 'photo · couverture', h: 240 }),
+        legacy: expect.objectContaining({ id: 'legacy-entry-1', ph: 'photo · couverture', h: 240 }),
         attachments: [{ name: 'scan.pdf', url: '/legacy/scan.pdf' }],
         references: [{ source: 'carnet', page: 4 }],
       }),
-    })]);
+    }));
+    expect(migrated.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(result.idMapping).toEqual([{ legacyId: 'legacy-entry-1', universeId: 'ecriture', id: migrated.id }]);
+  });
+
+  test('returns the same UUID for the same universe and legacy id', () => {
+    expect(legacyIdToUuid('notes', 'n-1')).toBe(legacyIdToUuid('notes', 'n-1'));
+    expect(legacyIdToUuid('notes', 'n-1')).not.toBe(legacyIdToUuid('autre', 'n-1'));
+  });
+
+  test('refuses migration without an authenticated user before remote mutation', async () => {
+    const storage = createStorage({
+      [LEGACY_STORE_KEY]: JSON.stringify({ notes: [{ id: 'n-1', type: 'text', txt: 'Note' }] }),
+    });
+    const upsert = vi.fn();
+
+    const result = await migrateLegacyStorage({ storage, upsertContentItems: upsert });
+
+    expect(result.status).toBe('missing-user');
+    expect(result.errors).toContain('Utilisateur authentifié requis pour importer les données.');
+    expect(upsert).not.toHaveBeenCalled();
+    expect(storage.getItem(MIGRATION_MARKER_KEY)).toBeNull();
   });
 
   test('exports a timestamped backup before remote mutation and marker write', async () => {
@@ -68,6 +97,11 @@ describe('legacy MIVIX storage migration', () => {
       [LEGACY_STORE_KEY]: JSON.stringify({ notes: [{ id: 'n-1', type: 'text', txt: 'Note' }] }),
     });
     const events = [];
+    const originalSetItem = storage.setItem;
+    storage.setItem = vi.fn((key, value) => {
+      if (key === MIGRATION_MARKER_KEY) events.push(['marker']);
+      return originalSetItem(key, value);
+    });
 
     const result = await migrateLegacyStorage({
       storage,
@@ -76,11 +110,12 @@ describe('legacy MIVIX storage migration', () => {
         events.push(['backup', backup.filename, backup.json]);
         return backup.filename;
       }),
+      userId: '11111111-1111-4111-8111-111111111111',
       upsertContentItems: vi.fn(async () => events.push(['upsert'])),
     });
 
     expect(result.backup.filename).toBe('mivix-local-backup-2024-07-03T09-46-40-123Z.json');
-    expect(events.map(([event]) => event)).toEqual(['backup', 'upsert']);
+    expect(events.map(([event]) => event)).toEqual(['backup', 'upsert', 'marker']);
     expect(JSON.parse(events[0][2]).legacyData.notes[0].id).toBe('n-1');
     expect(storage.getItem(LEGACY_STORE_KEY)).toContain('n-1');
     expect(storage.getItem(MIGRATION_MARKER_KEY)).toContain('2024-07-03T09:46:40.123Z');
@@ -89,15 +124,49 @@ describe('legacy MIVIX storage migration', () => {
   test('is idempotent after the migration marker is present', async () => {
     const storage = createStorage({
       [LEGACY_STORE_KEY]: JSON.stringify({ notes: [{ id: 'n-1', type: 'text', txt: 'Note' }] }),
-      [MIGRATION_MARKER_KEY]: JSON.stringify({ version: 1, migratedAt: '2024-07-03T09:46:40.123Z' }),
+      [MIGRATION_MARKER_KEY]: JSON.stringify({ version: 2, migratedAt: '2024-07-03T09:46:40.123Z' }),
     });
     const upsert = vi.fn();
 
-    const result = await migrateLegacyStorage({ storage, upsertContentItems: upsert });
+    const result = await migrateLegacyStorage({ storage, userId: 'user-1', upsertContentItems: upsert });
 
     expect(result.status).toBe('already-migrated');
     expect(upsert).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  test('does not write the marker when the remote upsert fails', async () => {
+    const storage = createStorage({
+      [LEGACY_STORE_KEY]: JSON.stringify({ notes: [{ id: 'n-1', type: 'text', txt: 'Note' }] }),
+    });
+
+    const result = await migrateLegacyStorage({
+      storage,
+      userId: '11111111-1111-4111-8111-111111111111',
+      upsertContentItems: vi.fn(async () => { throw new Error('Supabase indisponible'); }),
+    });
+
+    expect(result.status).toBe('remote-failed');
+    expect(result.error.message).toBe('Supabase indisponible');
+    expect(storage.getItem(MIGRATION_MARKER_KEY)).toBeNull();
+  });
+
+  test('reports marker failure after a successful upsert without creating a new identity', async () => {
+    const storage = createStorage({
+      [LEGACY_STORE_KEY]: JSON.stringify({ notes: [{ id: 'n-1', type: 'text', txt: 'Note' }] }),
+    });
+    storage.setItem = vi.fn(() => { throw new Error('quota'); });
+    const upsert = vi.fn(async (items) => items);
+
+    const result = await migrateLegacyStorage({
+      storage,
+      userId: '11111111-1111-4111-8111-111111111111',
+      upsertContentItems: upsert,
+    });
+
+    expect(result.status).toBe('marker-failed');
+    expect(upsert).toHaveBeenCalledWith([expect.objectContaining({ id: legacyIdToUuid('notes', 'n-1') })]);
+    expect(result.errors).toContain('Impossible d’enregistrer le marqueur local. Les IDs déterministes évitent les doublons lors d’une nouvelle tentative.');
   });
 
   test('skips malformed entries and reports invalid JSON without mutating storage', async () => {
@@ -114,10 +183,10 @@ describe('legacy MIVIX storage migration', () => {
     const validStorage = createStorage({
       [LEGACY_STORE_KEY]: JSON.stringify({ notes: [null, 'bad', { id: 'ok', type: 'quote', txt: 'Oui' }] }),
     });
-    const valid = await migrateLegacyStorage({ storage: validStorage, upsertContentItems: upsert });
+    const valid = await migrateLegacyStorage({ storage: validStorage, userId: 'user-1', upsertContentItems: upsert });
 
     expect(valid.status).toBe('migrated');
-    expect(upsert).toHaveBeenCalledWith([expect.objectContaining({ id: 'ok', content_type: 'quote' })]);
+    expect(upsert).toHaveBeenCalledWith([expect.objectContaining({ id: legacyIdToUuid('notes', 'ok'), content_type: 'quote' })]);
   });
 
   test('handles unavailable localStorage cleanly', async () => {
