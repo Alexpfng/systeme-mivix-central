@@ -1,9 +1,12 @@
 import { GeometricArt } from './GeometricArt';
 
-export default function MivixWidget({ widget }) {
+export default function MivixWidget({ widget, onOpen }) {
   return (
-    <article
+    <button
+      type="button"
       className={`mivix-widget widget-${widget.id}`}
+      aria-label={`Ouvrir ${widget.title}`}
+      onClick={() => onOpen?.(widget)}
       style={{ '--widget-bg': widget.color, '--widget-accent': widget.accent }}
     >
       <div className="widget-copy">
@@ -13,6 +16,6 @@ export default function MivixWidget({ widget }) {
         <span className="widget-detail">{widget.detail}</span>
       </div>
       <GeometricArt kind={widget.art} label={`Forme géométrique ${widget.title}`} />
-    </article>
+    </button>
   );
 }

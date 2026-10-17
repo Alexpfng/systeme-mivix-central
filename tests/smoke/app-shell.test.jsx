@@ -41,3 +41,13 @@ test('filters visible widgets from the search field without exposing private con
   expect(screen.queryByRole('heading', { name: 'Écriture' })).not.toBeInTheDocument();
   expect(screen.queryByText(/authenticated-user|@/i)).not.toBeInTheDocument();
 });
+
+test('opens a widget workspace when a universe is selected', async () => {
+  render(<AuthProvider><App /></AuthProvider>);
+
+  fireEvent.click(screen.getByRole('button', { name: /ouvrir projets transversal/i }));
+
+  expect(screen.getByRole('heading', { name: 'Projets transversal' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /retour aux univers/i })).toBeInTheDocument();
+  expect(screen.queryByTestId('mivix-widget-grid')).not.toBeInTheDocument();
+});
