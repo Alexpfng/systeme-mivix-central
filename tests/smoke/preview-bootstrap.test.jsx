@@ -19,3 +19,12 @@ test('renders the visual preview without importing Supabase configuration', asyn
   expect(screen.getByRole('banner')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: /un espace pour conserver/i })).toBeInTheDocument();
 });
+
+test('enables the visual preview only in development', async () => {
+  const { isVisualPreview } = await import('../../src/main');
+  const location = new URL('http://localhost/?preview=mivix');
+
+  expect(isVisualPreview(location, { DEV: true })).toBe(true);
+  expect(isVisualPreview(location, {})).toBe(false);
+  expect(isVisualPreview(location, { DEV: false })).toBe(false);
+});

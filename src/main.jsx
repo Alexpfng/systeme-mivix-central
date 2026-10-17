@@ -2,12 +2,13 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import VisualShell from './app/VisualShell';
 
-export function isVisualPreview(location = window.location) {
-  return new URLSearchParams(location.search).get('preview') === 'mivix';
+export function isVisualPreview(location = window.location, environment = import.meta.env) {
+  return Boolean(environment?.DEV)
+    && new URLSearchParams(location.search).get('preview') === 'mivix';
 }
 
 export async function bootstrap(root, location = window.location) {
-  if (isVisualPreview(location)) {
+  if (isVisualPreview(location, import.meta.env)) {
     createRoot(root).render(
       <React.StrictMode>
         <VisualShell />
