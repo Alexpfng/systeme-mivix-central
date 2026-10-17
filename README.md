@@ -4,7 +4,14 @@ Espace personnel numérique pour conserver, organiser, enrichir et transmettre s
 
 ## Ouvrir
 
-Ouvrir `MIVIX Central.html` dans un navigateur via un serveur HTTP local.
+Le nouveau shell modulaire se lance avec Vite :
+
+```bash
+npm run dev
+```
+
+Pour inspecter le rendu visuel sans session privée, ouvrir `http://localhost:5173/?preview=mivix`.
+La route normale conserve l’authentification Supabase et `MIVIX Central.html` reste disponible comme fallback local.
 
 ## Vérifier la base Supabase
 
