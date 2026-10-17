@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import App from '../app/App';
+import { MivixRobot } from '../app/GeometricArt';
+import '../styles/tokens.css';
 import { useAuth } from './AuthProvider';
 
 function getErrorMessage(error, fallback) {
@@ -47,7 +49,13 @@ export default function LoginPage() {
     }
   }
 
-  if (loading) return <p>Chargement…</p>;
+  if (loading) {
+    return (
+      <main className="mivix-login-page mivix-login-loading" aria-busy="true">
+        <div className="mivix-login-card"><span className="mivix-login-pulse" />Chargement de votre espace…</div>
+      </main>
+    );
+  }
 
   async function handlePasswordUpdate(event) {
     event.preventDefault();
@@ -71,38 +79,42 @@ export default function LoginPage() {
 
   if (session && isPasswordRecovery) {
     return (
-      <main>
-        <h1>Choisir un nouveau mot de passe</h1>
-        <form onSubmit={handlePasswordUpdate}>
-          <label htmlFor="new-password">Nouveau mot de passe</label>
-          <input
-            id="new-password"
-            name="new-password"
-            type="password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            required
-          />
-          <button type="submit" disabled={passwordSubmitting}>
-            {passwordSubmitting ? 'Enregistrement…' : 'Enregistrer le nouveau mot de passe'}
-          </button>
-        </form>
-        {error && <p role="alert">{error}</p>}
-        {message && <p role="status">{message}</p>}
+      <main className="mivix-login-page">
+        <section className="mivix-login-card mivix-login-card--compact">
+          <p className="mivix-login-eyebrow">SÉCURITÉ MIVIX</p>
+          <h1>Choisir un nouveau mot de passe</h1>
+          <p className="mivix-login-lead">Un nouveau départ pour garder votre espace personnel bien à vous.</p>
+          <form className="mivix-login-form" onSubmit={handlePasswordUpdate}>
+            <label htmlFor="new-password">Nouveau mot de passe</label>
+            <input
+              id="new-password"
+              name="new-password"
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              required
+            />
+            <button className="mivix-login-submit" type="submit" disabled={passwordSubmitting}>
+              {passwordSubmitting ? 'Enregistrement…' : 'Enregistrer le nouveau mot de passe'}
+            </button>
+          </form>
+          {error && <p className="mivix-login-feedback mivix-login-feedback--error" role="alert">{error}</p>}
+          {message && <p className="mivix-login-feedback" role="status">{message}</p>}
+        </section>
       </main>
     );
   }
 
   if (session) {
     return (
-      <>
+      <div className="mivix-authenticated-view">
         <App />
-        <button type="button" onClick={handleSignOut} disabled={submitting}>
+        <button className="mivix-signout" type="button" onClick={handleSignOut} disabled={submitting}>
           {submitting ? 'Déconnexion…' : 'Se déconnecter'}
         </button>
         {error && <p role="alert">{error}</p>}
-      </>
+      </div>
     );
   }
 
@@ -148,43 +160,61 @@ export default function LoginPage() {
   }
 
   return (
-    <main>
-      <h1>Connexion à MIVIX Central</h1>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
-
-        <label htmlFor="password">Mot de passe</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
-
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Connexion…' : 'Se connecter'}
+    <main className="mivix-login-page" data-testid="mivix-login-page">
+      <div className="mivix-login-orbit mivix-login-orbit--one" aria-hidden="true" />
+      <div className="mivix-login-orbit mivix-login-orbit--two" aria-hidden="true" />
+      <section className="mivix-login-card">
+        <header className="mivix-login-header">
+          <div className="mivix-login-brand" aria-label="MIVIX Central">
+            <span className="mivix-login-mark" aria-hidden="true"><span /></span>
+            <span>MIVIX <small>Central</small></span>
+          </div>
+          <p className="mivix-login-eyebrow">ESPACE PRIVÉ</p>
+          <h1>Votre espace personnel</h1>
+          <p className="mivix-login-lead">Retrouvez vos projets, vos idées et les choses qui comptent au même endroit.</p>
+        </header>
+        <form className="mivix-login-form" onSubmit={handleSubmit}>
+          <div className="mivix-login-field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </div>
+          <div className="mivix-login-field">
+            <label htmlFor="password">Mot de passe</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </div>
+          <button className="mivix-login-submit" type="submit" disabled={submitting}>
+            {submitting ? 'Connexion…' : 'Se connecter à MIVIX'}
+          </button>
+        </form>
+        <button className="mivix-login-reset" type="button" onClick={handlePasswordReset} disabled={resetSubmitting}>
+          {resetSubmitting ? 'Réinitialisation…' : 'Réinitialiser le mot de passe'}
         </button>
-      </form>
-      <button type="button" onClick={handlePasswordReset} disabled={resetSubmitting}>
-        {resetSubmitting ? 'Réinitialisation…' : 'Réinitialiser le mot de passe'}
-      </button>
-      {authError && (
-        <p role="alert">{getErrorMessage(authError, 'Impossible de charger la session.')}</p>
-      )}
-      {error && <p role="alert">{error}</p>}
-      {message && <p role="status">{message}</p>}
+        {authError && <p className="mivix-login-feedback mivix-login-feedback--error" role="alert">{getErrorMessage(authError, 'Impossible de charger la session.')}</p>}
+        {error && <p className="mivix-login-feedback mivix-login-feedback--error" role="alert">{error}</p>}
+        {message && <p className="mivix-login-feedback" role="status">{message}</p>}
+        <p className="mivix-login-footnote">Un espace privé, pensé pour rester simple et vivant.</p>
+      </section>
+      <aside className="mivix-login-aside">
+        <MivixRobot />
+        <p>Centraliser sans figer.</p>
+        <span>Projets · Création · Spiritualité</span>
+      </aside>
     </main>
   );
 }
