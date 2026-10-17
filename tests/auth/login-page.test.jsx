@@ -52,6 +52,8 @@ beforeEach(() => {
 test('shows email, password and submit controls when signed out', async () => {
   renderLoginPage();
 
+  expect(await screen.findByTestId('mivix-login-page')).toHaveClass('mivix-login-page');
+  expect(screen.getByText('Votre espace personnel')).toBeInTheDocument();
   expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/mot de passe|password/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /connexion|sign in|se connecter/i })).toBeInTheDocument();
