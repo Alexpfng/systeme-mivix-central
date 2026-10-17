@@ -82,6 +82,28 @@ describe('MIVIX core SQL contract', () => {
     );
   });
 
+  test('rejects astrology contact composite FKs that reference the wrong columns', () => {
+    const invalidMigration = migration.replace(
+      'references public.contacts(owner_id, id)',
+      'references public.contacts(id, owner_id)',
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'astrology_profiles composite contact FK must reference (owner_id, id)',
+    );
+  });
+
+  test('rejects astrology contact composite FKs without ON DELETE SET NULL', () => {
+    const invalidMigration = migration.replace(
+      'on delete set null (contact_id)',
+      'on delete cascade',
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'astrology_profiles composite contact FK must use ON DELETE SET NULL',
+    );
+  });
+
   test('restricts every public and Storage owner policy to authenticated exactly', () => {
     const publicPolicies = [...migration.matchAll(
       /create policy \w+ on public\.\w+\n  for \w+ to authenticated/g,
@@ -99,5 +121,49 @@ describe('MIVIX core SQL contract', () => {
   test('uses exact owner expressions in public and Storage policies', () => {
     expect(migration.match(/\(select auth\.uid\(\)\) = owner_id/g)).toHaveLength(40);
     expect(migration.match(/split_part\(name, '\/', 1\) = \(select auth\.uid\(\)\)::text/g)).toHaveLength(5);
+  });
+
+  test('rejects a public policy widened with OR true', () => {
+    const invalidMigration = migration.replace(
+      'using ((select auth.uid()) = owner_id);',
+      'using ((select auth.uid()) = owner_id or true);',
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'public.profiles select policy must have an exact USING owner expression',
+    );
+  });
+
+  test('rejects a public policy that drops the select auth.uid wrapper', () => {
+    const invalidMigration = migration.replace(
+      'using ((select auth.uid()) = owner_id);',
+      'using (auth.uid() = owner_id);',
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'public.profiles select policy must have an exact USING owner expression',
+    );
+  });
+
+  test('rejects a public policy with the wrong FOR and TO clauses', () => {
+    const invalidMigration = migration.replace(
+      'create policy contacts_delete_owner on public.contacts\n  for delete to authenticated',
+      'create policy contacts_delete_owner on public.contacts\n  for select to anon',
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'public.contacts delete policy must declare FOR delete TO authenticated',
+    );
+  });
+
+  test('rejects a Storage policy with an expanded path scope', () => {
+    const invalidMigration = migration.replace(
+      "split_part(name, '/', 1) = (select auth.uid())::text",
+      "split_part(name, '/', 2) = (select auth.uid())::text",
+    );
+
+    expect(validateMigration(invalidMigration)).toContain(
+      'Storage select policy must have an exact USING owner expression',
+    );
   });
 });

@@ -71,57 +71,77 @@ export const validateMigration = (migration) => {
     if (!rlsTables.includes(table)) errors.push(`RLS is not enabled on public.${table}`);
   }
 
-  const publicPolicyNames = [...migration.matchAll(/create policy (\w+_owner) on public\.(\w+)/g)];
-  if (publicPolicyNames.length !== 32) errors.push(`expected 32 public owner policies, found ${publicPolicyNames.length}`);
-  const authenticatedPolicyRoles = [...migration.matchAll(/\n  for \w+ to authenticated\n/g)];
-  if (authenticatedPolicyRoles.length !== 36) errors.push(`expected 36 exact authenticated policy roles, found ${authenticatedPolicyRoles.length}`);
-  if ((migration.match(/\(select auth\.uid\(\)\) = owner_id/g) ?? []).length !== 40) {
-    errors.push('expected 40 exact public (select auth.uid()) ownership expressions');
+  const normalizeSql = (sql) => sql.replace(/\s+/g, '').replace(/;$/, '').toLowerCase();
+  const policyBlocks = [...migration.matchAll(
+    /(?:^|\n)create policy\s+(\w+)\s+on\s+(public\.\w+|storage\.objects)([\s\S]*?)(?=\ncreate policy|\ninsert into storage|$)/gi,
+  )].map(([, name, scope, body]) => ({ name, scope: scope.toLowerCase(), body }));
+  const policiesByName = new Map(policyBlocks.map((policy) => [policy.name.toLowerCase(), policy]));
+  const publicPolicyNames = tables.flatMap((table) =>
+    ['select', 'insert', 'update', 'delete'].map((operation) => `${table}_${operation}_owner`));
+  const expectedPublicPolicyNames = new Set(publicPolicyNames);
+  const actualPublicPolicyNames = new Set(
+    policyBlocks.filter(({ scope }) => scope.startsWith('public.')).map(({ name }) => name.toLowerCase()),
+  );
+  if (actualPublicPolicyNames.size !== expectedPublicPolicyNames.size) {
+    errors.push(`expected 32 public owner policies, found ${actualPublicPolicyNames.size}`);
   }
+
+  const expectedPublicBody = {
+    select: 'using((selectauth.uid())=owner_id)',
+    insert: 'withcheck((selectauth.uid())=owner_id)',
+    update: 'using((selectauth.uid())=owner_id)withcheck((selectauth.uid())=owner_id)',
+    delete: 'using((selectauth.uid())=owner_id)',
+  };
   for (const table of tables) {
     for (const operation of ['select', 'insert', 'update', 'delete']) {
-      const block = migration.match(
-        new RegExp(`create policy ${table}_${operation}_owner on public\\.${table}([\\s\\S]*?)(?=\\ncreate policy|\\ninsert into storage)`),
-      )?.[1];
-      if (!block) {
+      const policyName = `${table}_${operation}_owner`;
+      const policy = policiesByName.get(policyName);
+      if (!policy || policy.scope !== `public.${table}`) {
         errors.push(`missing public.${table} ${operation} policy`);
         continue;
       }
-      const normalized = block.replace(/\s+/g, '').toLowerCase();
-      if (operation !== 'insert' && !normalized.includes('using((selectauth.uid())=owner_id)')) {
-        errors.push(`public.${table} ${operation} policy has an invalid exact USING owner expression`);
+      const header = policy.body.match(/^\s*for\s+(\w+)\s+to\s+([\w, ]+)/i);
+      if (!header || header[1].toLowerCase() !== operation || header[2].trim().toLowerCase() !== 'authenticated') {
+        errors.push(`public.${table} ${operation} policy must declare FOR ${operation} TO authenticated`);
+        continue;
       }
-      if (['insert', 'update'].includes(operation)
-        && !normalized.includes('withcheck((selectauth.uid())=owner_id)')) {
-        errors.push(`public.${table} ${operation} policy has an invalid exact WITH CHECK owner expression`);
+      const body = policy.body.slice(header[0].length);
+      if (normalizeSql(body) !== expectedPublicBody[operation]) {
+        errors.push(`public.${table} ${operation} policy must have an exact ${operation === 'insert' ? 'WITH CHECK' : operation === 'update' ? 'USING and WITH CHECK' : 'USING'} owner expression`);
       }
     }
   }
 
   if (!/values \('mivix-media', 'mivix-media', false\)/.test(migration)) errors.push('mivix-media bucket must be explicitly private');
-  const storagePolicyNames = [...migration.matchAll(/create policy (mivix_media_\w+_owner) on storage\.objects/g)];
-  if (storagePolicyNames.length !== 4) errors.push(`expected 4 Storage owner policies, found ${storagePolicyNames.length}`);
-  if ((migration.match(/split_part\(name, '\/', 1\) = \(select auth\.uid\(\)\)::text/g) ?? []).length !== 5) {
-    errors.push('expected 5 exact Storage first-path-segment ownership expressions');
+  const expectedStoragePolicyNames = new Set(['select', 'insert', 'update', 'delete'].map((operation) => `mivix_media_${operation}_owner`));
+  const actualStoragePolicyNames = new Set(
+    policyBlocks.filter(({ scope }) => scope === 'storage.objects').map(({ name }) => name.toLowerCase()),
+  );
+  if (actualStoragePolicyNames.size !== expectedStoragePolicyNames.size) {
+    errors.push(`expected 4 Storage owner policies, found ${actualStoragePolicyNames.size}`);
   }
+  const expectedStorageBody = {
+    select: "using(bucket_id='mivix-media'andsplit_part(name,'/',1)=(selectauth.uid())::text)",
+    insert: "withcheck(bucket_id='mivix-media'andsplit_part(name,'/',1)=(selectauth.uid())::text)",
+    update: "using(bucket_id='mivix-media'andsplit_part(name,'/',1)=(selectauth.uid())::text)withcheck(bucket_id='mivix-media'andsplit_part(name,'/',1)=(selectauth.uid())::text)",
+    delete: "using(bucket_id='mivix-media'andsplit_part(name,'/',1)=(selectauth.uid())::text)",
+  };
   for (const operation of ['select', 'insert', 'update', 'delete']) {
-    const block = migration.match(
-      new RegExp(`create policy mivix_media_${operation}_owner on storage\\.objects([\\s\\S]*?)(?=\\ncreate policy|$)`),
-    )?.[1];
-    if (!block) {
+    const policyName = `mivix_media_${operation}_owner`;
+    const policy = policiesByName.get(policyName);
+    if (!policy || policy.scope !== 'storage.objects') {
       errors.push(`missing Storage ${operation} policy`);
       continue;
     }
-    const normalized = block.replace(/\s+/g, '').toLowerCase();
-    const pathExpression = "split_part(name,'/',1)=(selectauth.uid())::text";
-    if (operation !== 'insert' && !normalized.includes(`using(bucket_id='mivix-media'andsplit_part(name,'/',1)=(selectauth.uid())::text)`)) {
-      errors.push(`Storage ${operation} policy has an invalid first-path-segment USING expression`);
+    const header = policy.body.match(/^\s*for\s+(\w+)\s+to\s+([\w, ]+)/i);
+    if (!header || header[1].toLowerCase() !== operation || header[2].trim().toLowerCase() !== 'authenticated') {
+      errors.push(`Storage ${operation} policy must declare FOR ${operation} TO authenticated`);
+      continue;
     }
-    if (['insert', 'update'].includes(operation)
-      && !normalized.includes(`withcheck(bucket_id='mivix-media'andsplit_part(name,'/',1)=(selectauth.uid())::text)`)) {
-      errors.push(`Storage ${operation} policy has an invalid first-path-segment WITH CHECK expression`);
+    const body = policy.body.slice(header[0].length);
+    if (normalizeSql(body) !== expectedStorageBody[operation]) {
+      errors.push(`Storage ${operation} policy must have an exact ${operation === 'insert' ? 'WITH CHECK' : operation === 'update' ? 'USING and WITH CHECK' : 'USING'} owner expression`);
     }
-    if (!normalized.includes(pathExpression)) errors.push(`Storage ${operation} policy is missing first-path-segment owner equality`);
   }
   return errors;
 };

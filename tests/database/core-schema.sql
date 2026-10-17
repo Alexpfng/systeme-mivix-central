@@ -205,46 +205,41 @@ begin
     'astrology_profiles',
     'ai_summaries'
   ] loop
-    for policy_record in
+    for expected_policy in
+      select * from (values
+        (table_name || '_select_owner', 'r'::text),
+        (table_name || '_insert_owner', 'a'::text),
+        (table_name || '_update_owner', 'w'::text),
+        (table_name || '_delete_owner', 'd'::text)
+      ) as expected(policy_name, command_code)
+    loop
       select polcmd::text as command, polroles::text as roles,
              pg_get_expr(polqual, polrelid) as using_expression,
              pg_get_expr(polwithcheck, polrelid) as check_expression
+      into policy_record
       from pg_policy
       where polrelid = format('public.%I', table_name)::regclass
-    loop
+        and polname = expected_policy.policy_name;
+
+      if not found then
+        raise exception 'missing policy % on public.%', expected_policy.policy_name, table_name;
+      end if;
+      if policy_record.roles <> '{authenticated}' then
+        raise exception 'policy % on public.% must have exactly authenticated role', expected_policy.policy_name, table_name;
+      end if;
+      if policy_record.command <> expected_policy.command_code then
+        raise exception 'policy % on public.% has wrong FOR command', expected_policy.policy_name, table_name;
+      end if;
+
       normalized_using := regexp_replace(lower(coalesce(policy_record.using_expression, '')), '\s+', '', 'g');
       normalized_check := regexp_replace(lower(coalesce(policy_record.check_expression, '')), '\s+', '', 'g');
-      if policy_record.roles not like '%authenticated%' then
-        raise exception 'policy on public.% is not restricted to authenticated', table_name;
-      end if;
-      if policy_record.roles::text <> '{authenticated}' then
-        raise exception 'policy on public.% must have exactly authenticated role', table_name;
-      end if;
       if policy_record.command <> 'a'
-         and normalized_using !~ '\(selectauth\.uid\(\)(asuid)?\).*=?owner_id' then
-        raise exception 'policy on public.% is missing exact (select auth.uid()) USING ownership check', table_name;
+         and normalized_using !~ '^\(*selectauth\.uid\(\)(asuid)?\)*=owner_id\)*$' then
+        raise exception 'policy % on public.% has a non-exact USING ownership expression', expected_policy.policy_name, table_name;
       end if;
       if policy_record.command in ('a', 'w')
-         and normalized_check !~ '\(selectauth\.uid\(\)(asuid)?\).*=?owner_id' then
-        raise exception 'write policy on public.% is missing exact (select auth.uid()) WITH CHECK ownership check', table_name;
-      end if;
-    end loop;
-
-    for expected_policy in
-      select * from (values
-        ('select'::text, 'r'::text),
-        ('insert'::text, 'a'::text),
-        ('update'::text, 'w'::text),
-        ('delete'::text, 'd'::text)
-      ) as expected(command_name, command_code)
-    loop
-      if not exists (
-        select 1
-        from pg_policy
-        where polrelid = format('public.%I', table_name)::regclass
-          and polcmd = expected_policy.command_code
-      ) then
-        raise exception 'missing % policy on public.%', expected_policy.command_name, table_name;
+         and normalized_check !~ '^\(*selectauth\.uid\(\)(asuid)?\)*=owner_id\)*$' then
+        raise exception 'policy % on public.% has a non-exact WITH CHECK ownership expression', expected_policy.policy_name, table_name;
       end if;
     end loop;
   end loop;
@@ -253,33 +248,46 @@ $$;
 
 do $$
 declare
-  command text;
+  expected_policy record;
+  policy_record record;
+  normalized_using text;
+  normalized_check text;
 begin
-  foreach command in array array['r', 'a', 'w', 'd'] loop
-    if not exists (
-      select 1
-      from pg_policy
-      where polrelid = 'storage.objects'::regclass
-        and polcmd = command
-        and polroles::text = '{authenticated}'
-        and (
-          command = 'a' or
-          (
-            lower(coalesce(pg_get_expr(polqual, polrelid), '')) like '%mivix-media%'
-            and regexp_replace(lower(coalesce(pg_get_expr(polqual, polrelid), '')), '\s+', '', 'g') ~
-              'split_part\(name,''/'',1\)=\(*selectauth\.uid\(\)(asuid)?\)*::text'
-          )
-        )
-        and (
-          command not in ('a', 'w') or
-          (
-            lower(coalesce(pg_get_expr(polwithcheck, polrelid), '')) like '%mivix-media%'
-            and regexp_replace(lower(coalesce(pg_get_expr(polwithcheck, polrelid), '')), '\s+', '', 'g') ~
-              'split_part\(name,''/'',1\)=\(*selectauth\.uid\(\)(asuid)?\)*::text'
-          )
-        )
-    ) then
-      raise exception 'missing owner-scoped authenticated Storage policy for command %', command;
+  for expected_policy in
+    select * from (values
+      ('mivix_media_select_owner', 'r'::text),
+      ('mivix_media_insert_owner', 'a'::text),
+      ('mivix_media_update_owner', 'w'::text),
+      ('mivix_media_delete_owner', 'd'::text)
+    ) as expected(policy_name, command_code)
+  loop
+    select polcmd::text as command, polroles::text as roles,
+           pg_get_expr(polqual, polrelid) as using_expression,
+           pg_get_expr(polwithcheck, polrelid) as check_expression
+    into policy_record
+    from pg_policy
+    where polrelid = 'storage.objects'::regclass
+      and polname = expected_policy.policy_name;
+
+    if not found then
+      raise exception 'missing Storage policy %', expected_policy.policy_name;
+    end if;
+    if policy_record.roles <> '{authenticated}' then
+      raise exception 'Storage policy % must have exactly authenticated role', expected_policy.policy_name;
+    end if;
+    if policy_record.command <> expected_policy.command_code then
+      raise exception 'Storage policy % has wrong FOR command', expected_policy.policy_name;
+    end if;
+
+    normalized_using := regexp_replace(lower(coalesce(policy_record.using_expression, '')), '\s+', '', 'g');
+    normalized_check := regexp_replace(lower(coalesce(policy_record.check_expression, '')), '\s+', '', 'g');
+    if policy_record.command <> 'a'
+       and normalized_using !~ '^\(*bucket_id=''mivix-media''andsplit_part\(name,''/'',1\)=\(*selectauth\.uid\(\)(asuid)?\)*::text\)*$' then
+      raise exception 'Storage policy % has a non-exact USING ownership expression', expected_policy.policy_name;
+    end if;
+    if policy_record.command in ('a', 'w')
+       and normalized_check !~ '^\(*bucket_id=''mivix-media''andsplit_part\(name,''/'',1\)=\(*selectauth\.uid\(\)(asuid)?\)*::text\)*$' then
+      raise exception 'Storage policy % has a non-exact WITH CHECK ownership expression', expected_policy.policy_name;
     end if;
   end loop;
 end;
