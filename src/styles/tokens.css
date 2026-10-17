@@ -130,3 +130,71 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; letter-spac
   .robot-caption { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .mivix-robot, .mivix-widget, .mivix-widget .widget-art { animation: none; transition: none; } }
+
+.mivix-login-page {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 540px) minmax(210px, 280px);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(30px, 7vw, 110px);
+  min-height: 100vh;
+  padding: clamp(28px, 6vw, 84px) 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 24%, var(--paper) 0, transparent 30%),
+    radial-gradient(circle at 14% 82%, var(--peche-w) 0, transparent 28%),
+    var(--cream);
+}
+.mivix-login-page::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .42; background: linear-gradient(115deg, transparent 0 48%, color-mix(in oklch, var(--terracotta) 8%, transparent) 48.1% 48.25%, transparent 48.35% 100%); }
+.mivix-login-card { position: relative; z-index: 2; width: 100%; padding: clamp(28px, 5vw, 56px); background: color-mix(in oklch, var(--paper) 91%, transparent); border: 1px solid color-mix(in oklch, var(--line) 78%, transparent); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); backdrop-filter: blur(18px); }
+.mivix-login-card--compact { max-width: 540px; }
+.mivix-login-header { margin-bottom: 34px; }
+.mivix-login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 58px; color: var(--ink); font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+.mivix-login-brand small { color: var(--ink-soft); font-size: .94em; font-weight: 400; }
+.mivix-login-mark { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border: 1.5px solid var(--terracotta); border-radius: 50%; }
+.mivix-login-mark::before, .mivix-login-mark::after { content: ''; position: absolute; border: 1px solid var(--terracotta); border-radius: 50%; }
+.mivix-login-mark::before { inset: 6px; opacity: .7; }
+.mivix-login-mark::after { inset: 12px; opacity: .5; }
+.mivix-login-mark span { width: 7px; height: 7px; border-radius: 50%; background: var(--terracotta); }
+.mivix-login-eyebrow { margin: 0 0 14px; color: var(--terracotta-d); font-size: 11px; font-weight: 700; letter-spacing: .22em; }
+.mivix-login-card h1 { max-width: 10ch; margin: 0; color: var(--ink); font-size: clamp(38px, 6vw, 64px); line-height: .98; }
+.mivix-login-lead { max-width: 38ch; margin: 22px 0 0; color: var(--ink-2); font-size: 16px; line-height: 1.55; }
+.mivix-login-form { display: grid; gap: 18px; }
+.mivix-login-field { display: grid; gap: 8px; }
+.mivix-login-field label, .mivix-login-form > label { color: var(--ink-2); font-size: 12px; font-weight: 700; letter-spacing: .05em; }
+.mivix-login-field input, .mivix-login-form > input { width: 100%; height: 52px; padding: 0 16px; color: var(--ink); background: color-mix(in oklch, var(--cream) 66%, white); border: 1px solid var(--line); border-radius: var(--r-sm); outline: 0; transition: border-color .2s var(--ease), box-shadow .2s var(--ease); }
+.mivix-login-field input:focus, .mivix-login-form > input:focus { border-color: var(--terracotta); box-shadow: 0 0 0 4px color-mix(in oklch, var(--terracotta) 15%, transparent); }
+.mivix-login-submit { min-height: 52px; margin-top: 8px; padding: 0 20px; color: var(--paper); background: var(--ink); border: 1px solid var(--ink); border-radius: var(--r-sm); font-weight: 700; letter-spacing: .02em; transition: transform .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease); }
+.mivix-login-submit:hover { background: var(--terracotta-d); border-color: var(--terracotta-d); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+.mivix-login-submit:focus-visible, .mivix-login-reset:focus-visible, .mivix-signout:focus-visible { outline: 2px solid var(--terracotta); outline-offset: 3px; }
+.mivix-login-submit:disabled { cursor: wait; opacity: .65; transform: none; }
+.mivix-login-reset { display: block; margin: 18px auto 0; padding: 4px 8px; color: var(--ink-soft); background: transparent; border: 0; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.mivix-login-reset:hover { color: var(--terracotta-d); }
+.mivix-login-feedback { margin: 18px 0 0; padding: 12px 14px; color: var(--sauge-d); background: var(--sauge-w); border: 1px solid color-mix(in oklch, var(--sauge) 30%, transparent); border-radius: var(--r-sm); font-size: 13px; line-height: 1.4; }
+.mivix-login-feedback--error { color: var(--prune); background: var(--rose-w); border-color: color-mix(in oklch, var(--rose) 30%, transparent); }
+.mivix-login-footnote { margin: 38px 0 0; color: var(--ink-faint); font-size: 12px; }
+.mivix-login-aside { position: relative; z-index: 2; display: grid; justify-items: center; gap: 10px; color: var(--ink-2); text-align: center; }
+.mivix-login-aside .mivix-robot { width: 154px; height: 154px; animation-duration: 5.5s; }
+.mivix-login-aside p { margin: 0; color: var(--ink); font-family: var(--font-display); font-size: 20px; }
+.mivix-login-aside span { color: var(--ink-faint); font-size: 11px; letter-spacing: .08em; }
+.mivix-login-orbit { position: absolute; z-index: 1; border: 1px solid var(--line); border-radius: 50%; opacity: .65; pointer-events: none; }
+.mivix-login-orbit--one { width: 520px; height: 520px; right: -180px; top: -170px; }
+.mivix-login-orbit--two { width: 300px; height: 300px; left: -125px; bottom: -130px; border-color: var(--sauge); opacity: .28; }
+.mivix-login-loading { display: grid; grid-template-columns: 1fr; place-items: center; }
+.mivix-login-loading .mivix-login-card { display: flex; align-items: center; justify-content: center; gap: 12px; max-width: 360px; padding: 22px 28px; font-family: var(--font-display); }
+.mivix-login-pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--terracotta); box-shadow: 0 0 0 7px var(--terracotta-w); }
+.mivix-authenticated-view { position: relative; }
+.mivix-signout { position: fixed; top: 18px; right: 18px; z-index: 20; padding: 8px 12px; color: var(--ink-2); background: color-mix(in oklch, var(--paper) 88%, transparent); border: 1px solid var(--line-soft); border-radius: 999px; font-size: 12px; box-shadow: var(--shadow-sm); }
+.mivix-signout:hover { color: var(--terracotta-d); border-color: var(--terracotta); }
+@media (max-width: 760px) {
+  .mivix-login-page { grid-template-columns: 1fr; gap: 22px; padding: 20px 16px 34px; }
+  .mivix-login-card { padding: 28px 22px; border-radius: var(--r-lg); }
+  .mivix-login-brand { margin-bottom: 44px; }
+  .mivix-login-card h1 { font-size: clamp(38px, 12vw, 56px); }
+  .mivix-login-aside { order: -1; justify-items: start; grid-template-columns: auto 1fr; text-align: left; }
+  .mivix-login-aside .mivix-robot { width: 78px; height: 78px; grid-row: span 2; }
+  .mivix-login-aside p { align-self: end; font-size: 17px; }
+  .mivix-login-aside span { align-self: start; }
+  .mivix-login-orbit--one { right: -280px; top: -220px; }
+}
