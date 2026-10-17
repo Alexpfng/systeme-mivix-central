@@ -38,6 +38,7 @@ for (const table of tables) {
 const indexes = [
   'contacts_owner_id_idx on public.contacts(owner_id)',
   'contacts_profile_id_idx on public.contacts(profile_id)',
+  'contacts_owner_profile_idx on public.contacts(owner_id, profile_id)',
   'projects_owner_id_idx on public.projects(owner_id)',
   'content_items_owner_id_idx on public.content_items(owner_id)',
   'media_assets_owner_id_idx on public.media_assets(owner_id)',
@@ -45,6 +46,7 @@ const indexes = [
   'entity_links_owner_target_idx on public.entity_links(owner_id, target_type, target_id)',
   'astrology_profiles_owner_id_idx on public.astrology_profiles(owner_id)',
   'astrology_profiles_contact_id_idx on public.astrology_profiles(contact_id)',
+  'astrology_profiles_owner_contact_idx on public.astrology_profiles(owner_id, contact_id)',
   'ai_summaries_owner_entity_idx on public.ai_summaries(owner_id, entity_type, entity_id)',
 ];
 for (const index of indexes) {
@@ -62,6 +64,10 @@ for (const table of tables) {
 const publicPolicyNames = [...migration.matchAll(/create policy (\w+_owner) on public\.(\w+)/g)];
 if (publicPolicyNames.length !== 32) {
   errors.push(`expected 32 public owner policies, found ${publicPolicyNames.length}`);
+}
+const authenticatedPolicyRoles = [...migration.matchAll(/\n  for \w+ to authenticated\n/g)];
+if (authenticatedPolicyRoles.length !== 36) {
+  errors.push(`expected 36 exact authenticated policy roles, found ${authenticatedPolicyRoles.length}`);
 }
 const publicPolicyExpression = /\(select auth\.uid\(\)\) = owner_id/g;
 if ((migration.match(publicPolicyExpression) ?? []).length !== 40) {
@@ -123,5 +129,5 @@ if (errors.length > 0) {
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log('Core SQL contract passed: 8 tables, 8 owner references, coherent timestamps, 10 key indexes, RLS, 32 public policies, 4 Storage policies, private bucket.');
+  console.log('Core SQL contract passed: 8 tables, 8 owner references, coherent timestamps, 12 key indexes, RLS, 32 public policies, 4 Storage policies, private bucket.');
 }

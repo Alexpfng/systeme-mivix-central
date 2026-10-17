@@ -6,6 +6,20 @@ Espace personnel numérique pour conserver, organiser, enrichir et transmettre s
 
 Ouvrir `MIVIX Central.html` dans un navigateur via un serveur HTTP local.
 
+## Vérifier la base Supabase
+
+La suite pgTAP comportementale se trouve dans `supabase/tests/rls_core.sql`. Avec la CLI Supabase installée et Docker démarré, lancer :
+
+```bash
+npm run test:database
+```
+
+Cette commande exécute `supabase test db`, qui applique les migrations puis lance les tests SQL contre la base locale. Si la CLI ou Docker est indisponible, elle affiche explicitement `NOT RUN` et le repli statique à exécuter :
+
+```bash
+npm run validate:sql
+```
+
 ## Univers
 
 - ✍️ Écriture — Histoires, réflexions, citations

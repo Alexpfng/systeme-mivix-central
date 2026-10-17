@@ -5,18 +5,23 @@ create table public.profiles (
   avatar_url text,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (owner_id, id)
 );
 
 create table public.contacts (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
-  profile_id uuid references public.profiles(id) on delete set null,
+  profile_id uuid,
   full_name text not null,
   relationship text,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (owner_id, id),
+  foreign key (owner_id, profile_id)
+    references public.profiles(owner_id, id)
+    on delete set null (profile_id)
 );
 
 create table public.projects (
@@ -72,7 +77,7 @@ create table public.entity_links (
 create table public.astrology_profiles (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
-  contact_id uuid references public.contacts(id) on delete set null,
+  contact_id uuid,
   name text not null,
   birth_date date,
   birth_time time,
@@ -81,7 +86,10 @@ create table public.astrology_profiles (
   notes text,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  foreign key (owner_id, contact_id)
+    references public.contacts(owner_id, id)
+    on delete set null (contact_id)
 );
 
 create table public.ai_summaries (
@@ -100,6 +108,7 @@ create table public.ai_summaries (
 
 create index contacts_owner_id_idx on public.contacts(owner_id);
 create index contacts_profile_id_idx on public.contacts(profile_id);
+create index contacts_owner_profile_idx on public.contacts(owner_id, profile_id);
 create index projects_owner_id_idx on public.projects(owner_id);
 create index content_items_owner_id_idx on public.content_items(owner_id);
 create index media_assets_owner_id_idx on public.media_assets(owner_id);
@@ -107,6 +116,7 @@ create index entity_links_owner_source_idx on public.entity_links(owner_id, sour
 create index entity_links_owner_target_idx on public.entity_links(owner_id, target_type, target_id);
 create index astrology_profiles_owner_id_idx on public.astrology_profiles(owner_id);
 create index astrology_profiles_contact_id_idx on public.astrology_profiles(contact_id);
+create index astrology_profiles_owner_contact_idx on public.astrology_profiles(owner_id, contact_id);
 create index ai_summaries_owner_entity_idx on public.ai_summaries(owner_id, entity_type, entity_id);
 
 grant select, insert, update, delete on table

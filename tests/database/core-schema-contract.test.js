@@ -34,6 +34,7 @@ describe('MIVIX core SQL contract', () => {
     for (const index of [
       'contacts_owner_id_idx on public.contacts(owner_id)',
       'contacts_profile_id_idx on public.contacts(profile_id)',
+      'contacts_owner_profile_idx on public.contacts(owner_id, profile_id)',
       'projects_owner_id_idx on public.projects(owner_id)',
       'content_items_owner_id_idx on public.content_items(owner_id)',
       'media_assets_owner_id_idx on public.media_assets(owner_id)',
@@ -41,10 +42,35 @@ describe('MIVIX core SQL contract', () => {
       'entity_links_owner_target_idx on public.entity_links(owner_id, target_type, target_id)',
       'astrology_profiles_owner_id_idx on public.astrology_profiles(owner_id)',
       'astrology_profiles_contact_id_idx on public.astrology_profiles(contact_id)',
+      'astrology_profiles_owner_contact_idx on public.astrology_profiles(owner_id, contact_id)',
       'ai_summaries_owner_entity_idx on public.ai_summaries(owner_id, entity_type, entity_id)',
     ]) {
       expect(migration).toContain(`create index ${index};`);
     }
+  });
+
+  test('preserves ownership across profile and contact foreign keys', () => {
+    expect(migration.match(/unique \(owner_id, id\)/g)).toHaveLength(2);
+    expect(migration).toMatch(
+      /foreign key \(owner_id, profile_id\)\s+references public\.profiles\(owner_id, id\)\s+on delete set null \(profile_id\)/,
+    );
+    expect(migration).toMatch(
+      /foreign key \(owner_id, contact_id\)\s+references public\.contacts\(owner_id, id\)\s+on delete set null \(contact_id\)/,
+    );
+  });
+
+  test('restricts every public and Storage owner policy to authenticated exactly', () => {
+    const publicPolicies = [...migration.matchAll(
+      /create policy \w+ on public\.\w+\n  for \w+ to authenticated/g,
+    )];
+    expect(publicPolicies).toHaveLength(32);
+
+    const storagePolicies = [...migration.matchAll(
+      /create policy \w+ on storage\.objects\n  for \w+ to authenticated/g,
+    )];
+    expect(storagePolicies).toHaveLength(4);
+    expect(migration).not.toMatch(/to public/);
+    expect(migration).not.toMatch(/to anon/);
   });
 
   test('uses exact owner expressions in public and Storage policies', () => {

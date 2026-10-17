@@ -106,6 +106,7 @@ begin
     select * from (values
       ('contacts_owner_id_idx', 'on public.contacts using btree (owner_id)'),
       ('contacts_profile_id_idx', 'on public.contacts using btree (profile_id)'),
+      ('contacts_owner_profile_idx', 'on public.contacts using btree (owner_id, profile_id)'),
       ('projects_owner_id_idx', 'on public.projects using btree (owner_id)'),
       ('content_items_owner_id_idx', 'on public.content_items using btree (owner_id)'),
       ('media_assets_owner_id_idx', 'on public.media_assets using btree (owner_id)'),
@@ -113,6 +114,7 @@ begin
       ('entity_links_owner_target_idx', 'on public.entity_links using btree (owner_id, target_type, target_id)'),
       ('astrology_profiles_owner_id_idx', 'on public.astrology_profiles using btree (owner_id)'),
       ('astrology_profiles_contact_id_idx', 'on public.astrology_profiles using btree (contact_id)'),
+      ('astrology_profiles_owner_contact_idx', 'on public.astrology_profiles using btree (owner_id, contact_id)'),
       ('ai_summaries_owner_entity_idx', 'on public.ai_summaries using btree (owner_id, entity_type, entity_id)')
     ) as indexes(index_name, definition_fragment)
   loop
@@ -126,6 +128,52 @@ begin
       raise exception 'missing key index %', expected_index.index_name;
     end if;
   end loop;
+end;
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.profiles'::regclass
+      and contype = 'u'
+      and conkey = array[
+        (select attnum from pg_attribute where attrelid = 'public.profiles'::regclass and attname = 'owner_id'),
+        (select attnum from pg_attribute where attrelid = 'public.profiles'::regclass and attname = 'id')
+      ]::smallint[]
+  ) then raise exception 'profiles must have UNIQUE (owner_id, id)'; end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.contacts'::regclass
+      and contype = 'u'
+      and conkey = array[
+        (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'owner_id'),
+        (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'id')
+      ]::smallint[]
+  ) then raise exception 'contacts must have UNIQUE (owner_id, id)'; end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.contacts'::regclass
+      and contype = 'f'
+      and confrelid = 'public.profiles'::regclass
+      and conkey = array[
+        (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'owner_id'),
+        (select attnum from pg_attribute where attrelid = 'public.contacts'::regclass and attname = 'profile_id')
+      ]::smallint[]
+  ) then raise exception 'contacts must have owner-preserving profile FK'; end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.astrology_profiles'::regclass
+      and contype = 'f'
+      and confrelid = 'public.contacts'::regclass
+      and conkey = array[
+        (select attnum from pg_attribute where attrelid = 'public.astrology_profiles'::regclass and attname = 'owner_id'),
+        (select attnum from pg_attribute where attrelid = 'public.astrology_profiles'::regclass and attname = 'contact_id')
+      ]::smallint[]
+  ) then raise exception 'astrology_profiles must have owner-preserving contact FK'; end if;
 end;
 $$;
 
@@ -158,6 +206,9 @@ begin
       normalized_check := regexp_replace(lower(coalesce(policy_record.check_expression, '')), '\s+', '', 'g');
       if policy_record.roles not like '%authenticated%' then
         raise exception 'policy on public.% is not restricted to authenticated', table_name;
+      end if;
+      if policy_record.roles::text <> '{authenticated}' then
+        raise exception 'policy on public.% must have exactly authenticated role', table_name;
       end if;
       if policy_record.command <> 'a'
          and normalized_using !~ '\(selectauth\.uid\(\)(asuid)?\).*=?owner_id' then
@@ -200,7 +251,7 @@ begin
       from pg_policy
       where polrelid = 'storage.objects'::regclass
         and polcmd = command
-        and polroles::text like '%authenticated%'
+        and polroles::text = '{authenticated}'
         and (
           command = 'a' or
           (
